@@ -17,11 +17,17 @@ import (
 type FileSystemMock struct {
 	t minimock.Tester
 
-	funcCopyDataToFile          func(string io.Reader) (err error)
-	inspectFuncCopyDataToFile   func(string io.Reader)
+	funcCopyDataToFile          func(s1 string, r1 io.Reader) (err error)
+	inspectFuncCopyDataToFile   func(s1 string, r1 io.Reader)
 	afterCopyDataToFileCounter  uint64
 	beforeCopyDataToFileCounter uint64
 	CopyDataToFileMock          mFileSystemMockCopyDataToFile
+
+	funcDeleteFile          func(s1 string) (err error)
+	inspectFuncDeleteFile   func(s1 string)
+	afterDeleteFileCounter  uint64
+	beforeDeleteFileCounter uint64
+	DeleteFileMock          mFileSystemMockDeleteFile
 
 	funcGetFilesInFolder          func(s1 string) (sa1 []string)
 	inspectFuncGetFilesInFolder   func(s1 string)
@@ -39,6 +45,9 @@ func NewFileSystemMock(t minimock.Tester) *FileSystemMock {
 
 	m.CopyDataToFileMock = mFileSystemMockCopyDataToFile{mock: m}
 	m.CopyDataToFileMock.callArgs = []*FileSystemMockCopyDataToFileParams{}
+
+	m.DeleteFileMock = mFileSystemMockDeleteFile{mock: m}
+	m.DeleteFileMock.callArgs = []*FileSystemMockDeleteFileParams{}
 
 	m.GetFilesInFolderMock = mFileSystemMockGetFilesInFolder{mock: m}
 	m.GetFilesInFolderMock.callArgs = []*FileSystemMockGetFilesInFolderParams{}
@@ -65,7 +74,8 @@ type FileSystemMockCopyDataToFileExpectation struct {
 
 // FileSystemMockCopyDataToFileParams contains parameters of the FileSystem.CopyDataToFile
 type FileSystemMockCopyDataToFileParams struct {
-	string io.Reader
+	s1 string
+	r1 io.Reader
 }
 
 // FileSystemMockCopyDataToFileResults contains results of the FileSystem.CopyDataToFile
@@ -74,7 +84,7 @@ type FileSystemMockCopyDataToFileResults struct {
 }
 
 // Expect sets up expected params for FileSystem.CopyDataToFile
-func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Expect(string io.Reader) *mFileSystemMockCopyDataToFile {
+func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Expect(s1 string, r1 io.Reader) *mFileSystemMockCopyDataToFile {
 	if mmCopyDataToFile.mock.funcCopyDataToFile != nil {
 		mmCopyDataToFile.mock.t.Fatalf("FileSystemMock.CopyDataToFile mock is already set by Set")
 	}
@@ -83,7 +93,7 @@ func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Expect(string io.Reader) 
 		mmCopyDataToFile.defaultExpectation = &FileSystemMockCopyDataToFileExpectation{}
 	}
 
-	mmCopyDataToFile.defaultExpectation.params = &FileSystemMockCopyDataToFileParams{string}
+	mmCopyDataToFile.defaultExpectation.params = &FileSystemMockCopyDataToFileParams{s1, r1}
 	for _, e := range mmCopyDataToFile.expectations {
 		if minimock.Equal(e.params, mmCopyDataToFile.defaultExpectation.params) {
 			mmCopyDataToFile.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmCopyDataToFile.defaultExpectation.params)
@@ -94,7 +104,7 @@ func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Expect(string io.Reader) 
 }
 
 // Inspect accepts an inspector function that has same arguments as the FileSystem.CopyDataToFile
-func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Inspect(f func(string io.Reader)) *mFileSystemMockCopyDataToFile {
+func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Inspect(f func(s1 string, r1 io.Reader)) *mFileSystemMockCopyDataToFile {
 	if mmCopyDataToFile.mock.inspectFuncCopyDataToFile != nil {
 		mmCopyDataToFile.mock.t.Fatalf("Inspect function is already set for FileSystemMock.CopyDataToFile")
 	}
@@ -118,7 +128,7 @@ func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Return(err error) *FileSy
 }
 
 //Set uses given function f to mock the FileSystem.CopyDataToFile method
-func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Set(f func(string io.Reader) (err error)) *FileSystemMock {
+func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Set(f func(s1 string, r1 io.Reader) (err error)) *FileSystemMock {
 	if mmCopyDataToFile.defaultExpectation != nil {
 		mmCopyDataToFile.mock.t.Fatalf("Default expectation is already set for the FileSystem.CopyDataToFile method")
 	}
@@ -133,14 +143,14 @@ func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) Set(f func(string io.Read
 
 // When sets expectation for the FileSystem.CopyDataToFile which will trigger the result defined by the following
 // Then helper
-func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) When(string io.Reader) *FileSystemMockCopyDataToFileExpectation {
+func (mmCopyDataToFile *mFileSystemMockCopyDataToFile) When(s1 string, r1 io.Reader) *FileSystemMockCopyDataToFileExpectation {
 	if mmCopyDataToFile.mock.funcCopyDataToFile != nil {
 		mmCopyDataToFile.mock.t.Fatalf("FileSystemMock.CopyDataToFile mock is already set by Set")
 	}
 
 	expectation := &FileSystemMockCopyDataToFileExpectation{
 		mock:   mmCopyDataToFile.mock,
-		params: &FileSystemMockCopyDataToFileParams{string},
+		params: &FileSystemMockCopyDataToFileParams{s1, r1},
 	}
 	mmCopyDataToFile.expectations = append(mmCopyDataToFile.expectations, expectation)
 	return expectation
@@ -153,15 +163,15 @@ func (e *FileSystemMockCopyDataToFileExpectation) Then(err error) *FileSystemMoc
 }
 
 // CopyDataToFile implements infrastructure.FileSystem
-func (mmCopyDataToFile *FileSystemMock) CopyDataToFile(string io.Reader) (err error) {
+func (mmCopyDataToFile *FileSystemMock) CopyDataToFile(s1 string, r1 io.Reader) (err error) {
 	mm_atomic.AddUint64(&mmCopyDataToFile.beforeCopyDataToFileCounter, 1)
 	defer mm_atomic.AddUint64(&mmCopyDataToFile.afterCopyDataToFileCounter, 1)
 
 	if mmCopyDataToFile.inspectFuncCopyDataToFile != nil {
-		mmCopyDataToFile.inspectFuncCopyDataToFile(string)
+		mmCopyDataToFile.inspectFuncCopyDataToFile(s1, r1)
 	}
 
-	mm_params := &FileSystemMockCopyDataToFileParams{string}
+	mm_params := &FileSystemMockCopyDataToFileParams{s1, r1}
 
 	// Record call args
 	mmCopyDataToFile.CopyDataToFileMock.mutex.Lock()
@@ -178,7 +188,7 @@ func (mmCopyDataToFile *FileSystemMock) CopyDataToFile(string io.Reader) (err er
 	if mmCopyDataToFile.CopyDataToFileMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmCopyDataToFile.CopyDataToFileMock.defaultExpectation.Counter, 1)
 		mm_want := mmCopyDataToFile.CopyDataToFileMock.defaultExpectation.params
-		mm_got := FileSystemMockCopyDataToFileParams{string}
+		mm_got := FileSystemMockCopyDataToFileParams{s1, r1}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
 			mmCopyDataToFile.t.Errorf("FileSystemMock.CopyDataToFile got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
@@ -190,9 +200,9 @@ func (mmCopyDataToFile *FileSystemMock) CopyDataToFile(string io.Reader) (err er
 		return (*mm_results).err
 	}
 	if mmCopyDataToFile.funcCopyDataToFile != nil {
-		return mmCopyDataToFile.funcCopyDataToFile(string)
+		return mmCopyDataToFile.funcCopyDataToFile(s1, r1)
 	}
-	mmCopyDataToFile.t.Fatalf("Unexpected call to FileSystemMock.CopyDataToFile. %v", string)
+	mmCopyDataToFile.t.Fatalf("Unexpected call to FileSystemMock.CopyDataToFile. %v %v", s1, r1)
 	return
 }
 
@@ -258,6 +268,221 @@ func (m *FileSystemMock) MinimockCopyDataToFileInspect() {
 	// if func was set then invocations count should be greater than zero
 	if m.funcCopyDataToFile != nil && mm_atomic.LoadUint64(&m.afterCopyDataToFileCounter) < 1 {
 		m.t.Error("Expected call to FileSystemMock.CopyDataToFile")
+	}
+}
+
+type mFileSystemMockDeleteFile struct {
+	mock               *FileSystemMock
+	defaultExpectation *FileSystemMockDeleteFileExpectation
+	expectations       []*FileSystemMockDeleteFileExpectation
+
+	callArgs []*FileSystemMockDeleteFileParams
+	mutex    sync.RWMutex
+}
+
+// FileSystemMockDeleteFileExpectation specifies expectation struct of the FileSystem.DeleteFile
+type FileSystemMockDeleteFileExpectation struct {
+	mock    *FileSystemMock
+	params  *FileSystemMockDeleteFileParams
+	results *FileSystemMockDeleteFileResults
+	Counter uint64
+}
+
+// FileSystemMockDeleteFileParams contains parameters of the FileSystem.DeleteFile
+type FileSystemMockDeleteFileParams struct {
+	s1 string
+}
+
+// FileSystemMockDeleteFileResults contains results of the FileSystem.DeleteFile
+type FileSystemMockDeleteFileResults struct {
+	err error
+}
+
+// Expect sets up expected params for FileSystem.DeleteFile
+func (mmDeleteFile *mFileSystemMockDeleteFile) Expect(s1 string) *mFileSystemMockDeleteFile {
+	if mmDeleteFile.mock.funcDeleteFile != nil {
+		mmDeleteFile.mock.t.Fatalf("FileSystemMock.DeleteFile mock is already set by Set")
+	}
+
+	if mmDeleteFile.defaultExpectation == nil {
+		mmDeleteFile.defaultExpectation = &FileSystemMockDeleteFileExpectation{}
+	}
+
+	mmDeleteFile.defaultExpectation.params = &FileSystemMockDeleteFileParams{s1}
+	for _, e := range mmDeleteFile.expectations {
+		if minimock.Equal(e.params, mmDeleteFile.defaultExpectation.params) {
+			mmDeleteFile.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDeleteFile.defaultExpectation.params)
+		}
+	}
+
+	return mmDeleteFile
+}
+
+// Inspect accepts an inspector function that has same arguments as the FileSystem.DeleteFile
+func (mmDeleteFile *mFileSystemMockDeleteFile) Inspect(f func(s1 string)) *mFileSystemMockDeleteFile {
+	if mmDeleteFile.mock.inspectFuncDeleteFile != nil {
+		mmDeleteFile.mock.t.Fatalf("Inspect function is already set for FileSystemMock.DeleteFile")
+	}
+
+	mmDeleteFile.mock.inspectFuncDeleteFile = f
+
+	return mmDeleteFile
+}
+
+// Return sets up results that will be returned by FileSystem.DeleteFile
+func (mmDeleteFile *mFileSystemMockDeleteFile) Return(err error) *FileSystemMock {
+	if mmDeleteFile.mock.funcDeleteFile != nil {
+		mmDeleteFile.mock.t.Fatalf("FileSystemMock.DeleteFile mock is already set by Set")
+	}
+
+	if mmDeleteFile.defaultExpectation == nil {
+		mmDeleteFile.defaultExpectation = &FileSystemMockDeleteFileExpectation{mock: mmDeleteFile.mock}
+	}
+	mmDeleteFile.defaultExpectation.results = &FileSystemMockDeleteFileResults{err}
+	return mmDeleteFile.mock
+}
+
+//Set uses given function f to mock the FileSystem.DeleteFile method
+func (mmDeleteFile *mFileSystemMockDeleteFile) Set(f func(s1 string) (err error)) *FileSystemMock {
+	if mmDeleteFile.defaultExpectation != nil {
+		mmDeleteFile.mock.t.Fatalf("Default expectation is already set for the FileSystem.DeleteFile method")
+	}
+
+	if len(mmDeleteFile.expectations) > 0 {
+		mmDeleteFile.mock.t.Fatalf("Some expectations are already set for the FileSystem.DeleteFile method")
+	}
+
+	mmDeleteFile.mock.funcDeleteFile = f
+	return mmDeleteFile.mock
+}
+
+// When sets expectation for the FileSystem.DeleteFile which will trigger the result defined by the following
+// Then helper
+func (mmDeleteFile *mFileSystemMockDeleteFile) When(s1 string) *FileSystemMockDeleteFileExpectation {
+	if mmDeleteFile.mock.funcDeleteFile != nil {
+		mmDeleteFile.mock.t.Fatalf("FileSystemMock.DeleteFile mock is already set by Set")
+	}
+
+	expectation := &FileSystemMockDeleteFileExpectation{
+		mock:   mmDeleteFile.mock,
+		params: &FileSystemMockDeleteFileParams{s1},
+	}
+	mmDeleteFile.expectations = append(mmDeleteFile.expectations, expectation)
+	return expectation
+}
+
+// Then sets up FileSystem.DeleteFile return parameters for the expectation previously defined by the When method
+func (e *FileSystemMockDeleteFileExpectation) Then(err error) *FileSystemMock {
+	e.results = &FileSystemMockDeleteFileResults{err}
+	return e.mock
+}
+
+// DeleteFile implements infrastructure.FileSystem
+func (mmDeleteFile *FileSystemMock) DeleteFile(s1 string) (err error) {
+	mm_atomic.AddUint64(&mmDeleteFile.beforeDeleteFileCounter, 1)
+	defer mm_atomic.AddUint64(&mmDeleteFile.afterDeleteFileCounter, 1)
+
+	if mmDeleteFile.inspectFuncDeleteFile != nil {
+		mmDeleteFile.inspectFuncDeleteFile(s1)
+	}
+
+	mm_params := &FileSystemMockDeleteFileParams{s1}
+
+	// Record call args
+	mmDeleteFile.DeleteFileMock.mutex.Lock()
+	mmDeleteFile.DeleteFileMock.callArgs = append(mmDeleteFile.DeleteFileMock.callArgs, mm_params)
+	mmDeleteFile.DeleteFileMock.mutex.Unlock()
+
+	for _, e := range mmDeleteFile.DeleteFileMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.err
+		}
+	}
+
+	if mmDeleteFile.DeleteFileMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmDeleteFile.DeleteFileMock.defaultExpectation.Counter, 1)
+		mm_want := mmDeleteFile.DeleteFileMock.defaultExpectation.params
+		mm_got := FileSystemMockDeleteFileParams{s1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmDeleteFile.t.Errorf("FileSystemMock.DeleteFile got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmDeleteFile.DeleteFileMock.defaultExpectation.results
+		if mm_results == nil {
+			mmDeleteFile.t.Fatal("No results are set for the FileSystemMock.DeleteFile")
+		}
+		return (*mm_results).err
+	}
+	if mmDeleteFile.funcDeleteFile != nil {
+		return mmDeleteFile.funcDeleteFile(s1)
+	}
+	mmDeleteFile.t.Fatalf("Unexpected call to FileSystemMock.DeleteFile. %v", s1)
+	return
+}
+
+// DeleteFileAfterCounter returns a count of finished FileSystemMock.DeleteFile invocations
+func (mmDeleteFile *FileSystemMock) DeleteFileAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDeleteFile.afterDeleteFileCounter)
+}
+
+// DeleteFileBeforeCounter returns a count of FileSystemMock.DeleteFile invocations
+func (mmDeleteFile *FileSystemMock) DeleteFileBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDeleteFile.beforeDeleteFileCounter)
+}
+
+// Calls returns a list of arguments used in each call to FileSystemMock.DeleteFile.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmDeleteFile *mFileSystemMockDeleteFile) Calls() []*FileSystemMockDeleteFileParams {
+	mmDeleteFile.mutex.RLock()
+
+	argCopy := make([]*FileSystemMockDeleteFileParams, len(mmDeleteFile.callArgs))
+	copy(argCopy, mmDeleteFile.callArgs)
+
+	mmDeleteFile.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockDeleteFileDone returns true if the count of the DeleteFile invocations corresponds
+// the number of defined expectations
+func (m *FileSystemMock) MinimockDeleteFileDone() bool {
+	for _, e := range m.DeleteFileMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DeleteFileMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDeleteFileCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDeleteFile != nil && mm_atomic.LoadUint64(&m.afterDeleteFileCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockDeleteFileInspect logs each unmet expectation
+func (m *FileSystemMock) MinimockDeleteFileInspect() {
+	for _, e := range m.DeleteFileMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to FileSystemMock.DeleteFile with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DeleteFileMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDeleteFileCounter) < 1 {
+		if m.DeleteFileMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to FileSystemMock.DeleteFile")
+		} else {
+			m.t.Errorf("Expected call to FileSystemMock.DeleteFile with params: %#v", *m.DeleteFileMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDeleteFile != nil && mm_atomic.LoadUint64(&m.afterDeleteFileCounter) < 1 {
+		m.t.Error("Expected call to FileSystemMock.DeleteFile")
 	}
 }
 
@@ -481,6 +706,8 @@ func (m *FileSystemMock) MinimockFinish() {
 	if !m.minimockDone() {
 		m.MinimockCopyDataToFileInspect()
 
+		m.MinimockDeleteFileInspect()
+
 		m.MinimockGetFilesInFolderInspect()
 		m.t.FailNow()
 	}
@@ -506,5 +733,6 @@ func (m *FileSystemMock) minimockDone() bool {
 	done := true
 	return done &&
 		m.MinimockCopyDataToFileDone() &&
+		m.MinimockDeleteFileDone() &&
 		m.MinimockGetFilesInFolderDone()
 }

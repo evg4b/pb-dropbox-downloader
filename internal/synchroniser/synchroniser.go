@@ -1,16 +1,19 @@
 package synchroniser
 
 import (
+	"fmt"
+	"io"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/internal"
-	"pb-dropbox-downloader/utils"
-	"strings"
 )
 
+// DropboxSynchroniser Dropbox data synchroniser app structure
 type DropboxSynchroniser struct {
-	storage internal.DataStorage
-	files   infrastructure.FileSystem
-	dropbox infrastructure.Dropbox
+	storage        internal.DataStorage
+	files          infrastructure.FileSystem
+	dropbox        infrastructure.Dropbox
+	maxParallelism int
+	output         io.Writer
 }
 
 // NewSynchroniser creates and initialize new instance of DropboxSynchroniser create
@@ -18,47 +21,17 @@ func NewSynchroniser(
 	storage internal.DataStorage,
 	files infrastructure.FileSystem,
 	dropbox infrastructure.Dropbox,
+	output io.Writer,
 ) *DropboxSynchroniser {
 	return &DropboxSynchroniser{
-		storage: storage,
-		files:   files,
-		dropbox: dropbox,
+		storage:        storage,
+		files:          files,
+		dropbox:        dropbox,
+		maxParallelism: 3,
+		output:         output,
 	}
 }
 
-func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
-	files := db.files.GetFilesInFolder(folder)
-	err := db.refreshStorage(files)
-	if err != nil {
-		return err
-	}
-
-	remotesFiles := db.dropbox.GetFiles()
-	filesToDownload := []infrastructure.RemoteFile{}
-	for _, remoteFile := range remotesFiles {
-		if hash, ok := db.storage.Get(remoteFile.Path); ok {
-			if strings.EqualFold(hash, remoteFile.Hash) {
-				continue
-			}
-		}
-
-		filesToDownload = append(filesToDownload, remoteFile)
-	}
-
-	db.download(remotesFiles)
-
-	return nil
-}
-
-func (db *DropboxSynchroniser) refreshStorage(files []string) error {
-	storageMap, err := db.storage.ToMap()
-	if err != nil {
-		return err
-	}
-
-	filteredMap := utils.FilterMapBy(storageMap, func(key, _ string) bool {
-		return utils.Contins(files, key)
-	})
-
-	return db.storage.FromMap(filteredMap)
+func (db *DropboxSynchroniser) printf(format string, a ...interface{}) {
+	fmt.Fprintln(db.output, fmt.Sprintf(format, a...))
 }

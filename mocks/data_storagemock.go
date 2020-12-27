@@ -28,6 +28,12 @@ type DataStorageMock struct {
 	beforeGetCounter uint64
 	GetMock          mDataStorageMockGet
 
+	funcKeyExists          func(s1 string) (b1 bool)
+	inspectFuncKeyExists   func(s1 string)
+	afterKeyExistsCounter  uint64
+	beforeKeyExistsCounter uint64
+	KeyExistsMock          mDataStorageMockKeyExists
+
 	funcToMap          func() (m1 map[string]string, err error)
 	inspectFuncToMap   func()
 	afterToMapCounter  uint64
@@ -47,6 +53,9 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 
 	m.GetMock = mDataStorageMockGet{mock: m}
 	m.GetMock.callArgs = []*DataStorageMockGetParams{}
+
+	m.KeyExistsMock = mDataStorageMockKeyExists{mock: m}
+	m.KeyExistsMock.callArgs = []*DataStorageMockKeyExistsParams{}
 
 	m.ToMapMock = mDataStorageMockToMap{mock: m}
 
@@ -484,6 +493,221 @@ func (m *DataStorageMock) MinimockGetInspect() {
 	}
 }
 
+type mDataStorageMockKeyExists struct {
+	mock               *DataStorageMock
+	defaultExpectation *DataStorageMockKeyExistsExpectation
+	expectations       []*DataStorageMockKeyExistsExpectation
+
+	callArgs []*DataStorageMockKeyExistsParams
+	mutex    sync.RWMutex
+}
+
+// DataStorageMockKeyExistsExpectation specifies expectation struct of the DataStorage.KeyExists
+type DataStorageMockKeyExistsExpectation struct {
+	mock    *DataStorageMock
+	params  *DataStorageMockKeyExistsParams
+	results *DataStorageMockKeyExistsResults
+	Counter uint64
+}
+
+// DataStorageMockKeyExistsParams contains parameters of the DataStorage.KeyExists
+type DataStorageMockKeyExistsParams struct {
+	s1 string
+}
+
+// DataStorageMockKeyExistsResults contains results of the DataStorage.KeyExists
+type DataStorageMockKeyExistsResults struct {
+	b1 bool
+}
+
+// Expect sets up expected params for DataStorage.KeyExists
+func (mmKeyExists *mDataStorageMockKeyExists) Expect(s1 string) *mDataStorageMockKeyExists {
+	if mmKeyExists.mock.funcKeyExists != nil {
+		mmKeyExists.mock.t.Fatalf("DataStorageMock.KeyExists mock is already set by Set")
+	}
+
+	if mmKeyExists.defaultExpectation == nil {
+		mmKeyExists.defaultExpectation = &DataStorageMockKeyExistsExpectation{}
+	}
+
+	mmKeyExists.defaultExpectation.params = &DataStorageMockKeyExistsParams{s1}
+	for _, e := range mmKeyExists.expectations {
+		if minimock.Equal(e.params, mmKeyExists.defaultExpectation.params) {
+			mmKeyExists.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmKeyExists.defaultExpectation.params)
+		}
+	}
+
+	return mmKeyExists
+}
+
+// Inspect accepts an inspector function that has same arguments as the DataStorage.KeyExists
+func (mmKeyExists *mDataStorageMockKeyExists) Inspect(f func(s1 string)) *mDataStorageMockKeyExists {
+	if mmKeyExists.mock.inspectFuncKeyExists != nil {
+		mmKeyExists.mock.t.Fatalf("Inspect function is already set for DataStorageMock.KeyExists")
+	}
+
+	mmKeyExists.mock.inspectFuncKeyExists = f
+
+	return mmKeyExists
+}
+
+// Return sets up results that will be returned by DataStorage.KeyExists
+func (mmKeyExists *mDataStorageMockKeyExists) Return(b1 bool) *DataStorageMock {
+	if mmKeyExists.mock.funcKeyExists != nil {
+		mmKeyExists.mock.t.Fatalf("DataStorageMock.KeyExists mock is already set by Set")
+	}
+
+	if mmKeyExists.defaultExpectation == nil {
+		mmKeyExists.defaultExpectation = &DataStorageMockKeyExistsExpectation{mock: mmKeyExists.mock}
+	}
+	mmKeyExists.defaultExpectation.results = &DataStorageMockKeyExistsResults{b1}
+	return mmKeyExists.mock
+}
+
+//Set uses given function f to mock the DataStorage.KeyExists method
+func (mmKeyExists *mDataStorageMockKeyExists) Set(f func(s1 string) (b1 bool)) *DataStorageMock {
+	if mmKeyExists.defaultExpectation != nil {
+		mmKeyExists.mock.t.Fatalf("Default expectation is already set for the DataStorage.KeyExists method")
+	}
+
+	if len(mmKeyExists.expectations) > 0 {
+		mmKeyExists.mock.t.Fatalf("Some expectations are already set for the DataStorage.KeyExists method")
+	}
+
+	mmKeyExists.mock.funcKeyExists = f
+	return mmKeyExists.mock
+}
+
+// When sets expectation for the DataStorage.KeyExists which will trigger the result defined by the following
+// Then helper
+func (mmKeyExists *mDataStorageMockKeyExists) When(s1 string) *DataStorageMockKeyExistsExpectation {
+	if mmKeyExists.mock.funcKeyExists != nil {
+		mmKeyExists.mock.t.Fatalf("DataStorageMock.KeyExists mock is already set by Set")
+	}
+
+	expectation := &DataStorageMockKeyExistsExpectation{
+		mock:   mmKeyExists.mock,
+		params: &DataStorageMockKeyExistsParams{s1},
+	}
+	mmKeyExists.expectations = append(mmKeyExists.expectations, expectation)
+	return expectation
+}
+
+// Then sets up DataStorage.KeyExists return parameters for the expectation previously defined by the When method
+func (e *DataStorageMockKeyExistsExpectation) Then(b1 bool) *DataStorageMock {
+	e.results = &DataStorageMockKeyExistsResults{b1}
+	return e.mock
+}
+
+// KeyExists implements internal.DataStorage
+func (mmKeyExists *DataStorageMock) KeyExists(s1 string) (b1 bool) {
+	mm_atomic.AddUint64(&mmKeyExists.beforeKeyExistsCounter, 1)
+	defer mm_atomic.AddUint64(&mmKeyExists.afterKeyExistsCounter, 1)
+
+	if mmKeyExists.inspectFuncKeyExists != nil {
+		mmKeyExists.inspectFuncKeyExists(s1)
+	}
+
+	mm_params := &DataStorageMockKeyExistsParams{s1}
+
+	// Record call args
+	mmKeyExists.KeyExistsMock.mutex.Lock()
+	mmKeyExists.KeyExistsMock.callArgs = append(mmKeyExists.KeyExistsMock.callArgs, mm_params)
+	mmKeyExists.KeyExistsMock.mutex.Unlock()
+
+	for _, e := range mmKeyExists.KeyExistsMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.b1
+		}
+	}
+
+	if mmKeyExists.KeyExistsMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmKeyExists.KeyExistsMock.defaultExpectation.Counter, 1)
+		mm_want := mmKeyExists.KeyExistsMock.defaultExpectation.params
+		mm_got := DataStorageMockKeyExistsParams{s1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmKeyExists.t.Errorf("DataStorageMock.KeyExists got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmKeyExists.KeyExistsMock.defaultExpectation.results
+		if mm_results == nil {
+			mmKeyExists.t.Fatal("No results are set for the DataStorageMock.KeyExists")
+		}
+		return (*mm_results).b1
+	}
+	if mmKeyExists.funcKeyExists != nil {
+		return mmKeyExists.funcKeyExists(s1)
+	}
+	mmKeyExists.t.Fatalf("Unexpected call to DataStorageMock.KeyExists. %v", s1)
+	return
+}
+
+// KeyExistsAfterCounter returns a count of finished DataStorageMock.KeyExists invocations
+func (mmKeyExists *DataStorageMock) KeyExistsAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmKeyExists.afterKeyExistsCounter)
+}
+
+// KeyExistsBeforeCounter returns a count of DataStorageMock.KeyExists invocations
+func (mmKeyExists *DataStorageMock) KeyExistsBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmKeyExists.beforeKeyExistsCounter)
+}
+
+// Calls returns a list of arguments used in each call to DataStorageMock.KeyExists.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmKeyExists *mDataStorageMockKeyExists) Calls() []*DataStorageMockKeyExistsParams {
+	mmKeyExists.mutex.RLock()
+
+	argCopy := make([]*DataStorageMockKeyExistsParams, len(mmKeyExists.callArgs))
+	copy(argCopy, mmKeyExists.callArgs)
+
+	mmKeyExists.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockKeyExistsDone returns true if the count of the KeyExists invocations corresponds
+// the number of defined expectations
+func (m *DataStorageMock) MinimockKeyExistsDone() bool {
+	for _, e := range m.KeyExistsMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.KeyExistsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterKeyExistsCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcKeyExists != nil && mm_atomic.LoadUint64(&m.afterKeyExistsCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockKeyExistsInspect logs each unmet expectation
+func (m *DataStorageMock) MinimockKeyExistsInspect() {
+	for _, e := range m.KeyExistsMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to DataStorageMock.KeyExists with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.KeyExistsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterKeyExistsCounter) < 1 {
+		if m.KeyExistsMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to DataStorageMock.KeyExists")
+		} else {
+			m.t.Errorf("Expected call to DataStorageMock.KeyExists with params: %#v", *m.KeyExistsMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcKeyExists != nil && mm_atomic.LoadUint64(&m.afterKeyExistsCounter) < 1 {
+		m.t.Error("Expected call to DataStorageMock.KeyExists")
+	}
+}
+
 type mDataStorageMockToMap struct {
 	mock               *DataStorageMock
 	defaultExpectation *DataStorageMockToMapExpectation
@@ -635,6 +859,8 @@ func (m *DataStorageMock) MinimockFinish() {
 
 		m.MinimockGetInspect()
 
+		m.MinimockKeyExistsInspect()
+
 		m.MinimockToMapInspect()
 		m.t.FailNow()
 	}
@@ -661,5 +887,6 @@ func (m *DataStorageMock) minimockDone() bool {
 	return done &&
 		m.MinimockFromMapDone() &&
 		m.MinimockGetDone() &&
+		m.MinimockKeyExistsDone() &&
 		m.MinimockToMapDone()
 }

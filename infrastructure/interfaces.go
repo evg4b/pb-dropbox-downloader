@@ -7,7 +7,8 @@ type FileSystem interface {
 	// GetFiles return relative file paths in folder (include subfolder to)
 	GetFilesInFolder(string) []string
 	// CopyDataToFile copy data from reader to file
-	CopyDataToFile(string io.Reader) error
+	CopyDataToFile(string, io.Reader) error
+	DeleteFile(string) error
 }
 
 type RemoteFile struct {
@@ -18,4 +19,5 @@ type RemoteFile struct {
 type Dropbox interface {
 	// GetFiles return relative file paths in folder (include subfolder to)
 	GetFiles() []RemoteFile
+	DownloadFile(string) (io.Reader, error)
 }

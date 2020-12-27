@@ -5,7 +5,9 @@ package mocks
 //go:generate minimock -i pb-dropbox-downloader/infrastructure.Dropbox -o ./mocks\dropboxmock.go
 
 import (
+	"io"
 	mm_infrastructure "pb-dropbox-downloader/infrastructure"
+	"sync"
 	mm_atomic "sync/atomic"
 	mm_time "time"
 
@@ -15,6 +17,12 @@ import (
 // DropboxMock implements infrastructure.Dropbox
 type DropboxMock struct {
 	t minimock.Tester
+
+	funcDownloadFile          func(s1 string) (r1 io.Reader, err error)
+	inspectFuncDownloadFile   func(s1 string)
+	afterDownloadFileCounter  uint64
+	beforeDownloadFileCounter uint64
+	DownloadFileMock          mDropboxMockDownloadFile
 
 	funcGetFiles          func() (ra1 []mm_infrastructure.RemoteFile)
 	inspectFuncGetFiles   func()
@@ -30,9 +38,228 @@ func NewDropboxMock(t minimock.Tester) *DropboxMock {
 		controller.RegisterMocker(m)
 	}
 
+	m.DownloadFileMock = mDropboxMockDownloadFile{mock: m}
+	m.DownloadFileMock.callArgs = []*DropboxMockDownloadFileParams{}
+
 	m.GetFilesMock = mDropboxMockGetFiles{mock: m}
 
 	return m
+}
+
+type mDropboxMockDownloadFile struct {
+	mock               *DropboxMock
+	defaultExpectation *DropboxMockDownloadFileExpectation
+	expectations       []*DropboxMockDownloadFileExpectation
+
+	callArgs []*DropboxMockDownloadFileParams
+	mutex    sync.RWMutex
+}
+
+// DropboxMockDownloadFileExpectation specifies expectation struct of the Dropbox.DownloadFile
+type DropboxMockDownloadFileExpectation struct {
+	mock    *DropboxMock
+	params  *DropboxMockDownloadFileParams
+	results *DropboxMockDownloadFileResults
+	Counter uint64
+}
+
+// DropboxMockDownloadFileParams contains parameters of the Dropbox.DownloadFile
+type DropboxMockDownloadFileParams struct {
+	s1 string
+}
+
+// DropboxMockDownloadFileResults contains results of the Dropbox.DownloadFile
+type DropboxMockDownloadFileResults struct {
+	r1  io.Reader
+	err error
+}
+
+// Expect sets up expected params for Dropbox.DownloadFile
+func (mmDownloadFile *mDropboxMockDownloadFile) Expect(s1 string) *mDropboxMockDownloadFile {
+	if mmDownloadFile.mock.funcDownloadFile != nil {
+		mmDownloadFile.mock.t.Fatalf("DropboxMock.DownloadFile mock is already set by Set")
+	}
+
+	if mmDownloadFile.defaultExpectation == nil {
+		mmDownloadFile.defaultExpectation = &DropboxMockDownloadFileExpectation{}
+	}
+
+	mmDownloadFile.defaultExpectation.params = &DropboxMockDownloadFileParams{s1}
+	for _, e := range mmDownloadFile.expectations {
+		if minimock.Equal(e.params, mmDownloadFile.defaultExpectation.params) {
+			mmDownloadFile.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDownloadFile.defaultExpectation.params)
+		}
+	}
+
+	return mmDownloadFile
+}
+
+// Inspect accepts an inspector function that has same arguments as the Dropbox.DownloadFile
+func (mmDownloadFile *mDropboxMockDownloadFile) Inspect(f func(s1 string)) *mDropboxMockDownloadFile {
+	if mmDownloadFile.mock.inspectFuncDownloadFile != nil {
+		mmDownloadFile.mock.t.Fatalf("Inspect function is already set for DropboxMock.DownloadFile")
+	}
+
+	mmDownloadFile.mock.inspectFuncDownloadFile = f
+
+	return mmDownloadFile
+}
+
+// Return sets up results that will be returned by Dropbox.DownloadFile
+func (mmDownloadFile *mDropboxMockDownloadFile) Return(r1 io.Reader, err error) *DropboxMock {
+	if mmDownloadFile.mock.funcDownloadFile != nil {
+		mmDownloadFile.mock.t.Fatalf("DropboxMock.DownloadFile mock is already set by Set")
+	}
+
+	if mmDownloadFile.defaultExpectation == nil {
+		mmDownloadFile.defaultExpectation = &DropboxMockDownloadFileExpectation{mock: mmDownloadFile.mock}
+	}
+	mmDownloadFile.defaultExpectation.results = &DropboxMockDownloadFileResults{r1, err}
+	return mmDownloadFile.mock
+}
+
+//Set uses given function f to mock the Dropbox.DownloadFile method
+func (mmDownloadFile *mDropboxMockDownloadFile) Set(f func(s1 string) (r1 io.Reader, err error)) *DropboxMock {
+	if mmDownloadFile.defaultExpectation != nil {
+		mmDownloadFile.mock.t.Fatalf("Default expectation is already set for the Dropbox.DownloadFile method")
+	}
+
+	if len(mmDownloadFile.expectations) > 0 {
+		mmDownloadFile.mock.t.Fatalf("Some expectations are already set for the Dropbox.DownloadFile method")
+	}
+
+	mmDownloadFile.mock.funcDownloadFile = f
+	return mmDownloadFile.mock
+}
+
+// When sets expectation for the Dropbox.DownloadFile which will trigger the result defined by the following
+// Then helper
+func (mmDownloadFile *mDropboxMockDownloadFile) When(s1 string) *DropboxMockDownloadFileExpectation {
+	if mmDownloadFile.mock.funcDownloadFile != nil {
+		mmDownloadFile.mock.t.Fatalf("DropboxMock.DownloadFile mock is already set by Set")
+	}
+
+	expectation := &DropboxMockDownloadFileExpectation{
+		mock:   mmDownloadFile.mock,
+		params: &DropboxMockDownloadFileParams{s1},
+	}
+	mmDownloadFile.expectations = append(mmDownloadFile.expectations, expectation)
+	return expectation
+}
+
+// Then sets up Dropbox.DownloadFile return parameters for the expectation previously defined by the When method
+func (e *DropboxMockDownloadFileExpectation) Then(r1 io.Reader, err error) *DropboxMock {
+	e.results = &DropboxMockDownloadFileResults{r1, err}
+	return e.mock
+}
+
+// DownloadFile implements infrastructure.Dropbox
+func (mmDownloadFile *DropboxMock) DownloadFile(s1 string) (r1 io.Reader, err error) {
+	mm_atomic.AddUint64(&mmDownloadFile.beforeDownloadFileCounter, 1)
+	defer mm_atomic.AddUint64(&mmDownloadFile.afterDownloadFileCounter, 1)
+
+	if mmDownloadFile.inspectFuncDownloadFile != nil {
+		mmDownloadFile.inspectFuncDownloadFile(s1)
+	}
+
+	mm_params := &DropboxMockDownloadFileParams{s1}
+
+	// Record call args
+	mmDownloadFile.DownloadFileMock.mutex.Lock()
+	mmDownloadFile.DownloadFileMock.callArgs = append(mmDownloadFile.DownloadFileMock.callArgs, mm_params)
+	mmDownloadFile.DownloadFileMock.mutex.Unlock()
+
+	for _, e := range mmDownloadFile.DownloadFileMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.r1, e.results.err
+		}
+	}
+
+	if mmDownloadFile.DownloadFileMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmDownloadFile.DownloadFileMock.defaultExpectation.Counter, 1)
+		mm_want := mmDownloadFile.DownloadFileMock.defaultExpectation.params
+		mm_got := DropboxMockDownloadFileParams{s1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmDownloadFile.t.Errorf("DropboxMock.DownloadFile got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmDownloadFile.DownloadFileMock.defaultExpectation.results
+		if mm_results == nil {
+			mmDownloadFile.t.Fatal("No results are set for the DropboxMock.DownloadFile")
+		}
+		return (*mm_results).r1, (*mm_results).err
+	}
+	if mmDownloadFile.funcDownloadFile != nil {
+		return mmDownloadFile.funcDownloadFile(s1)
+	}
+	mmDownloadFile.t.Fatalf("Unexpected call to DropboxMock.DownloadFile. %v", s1)
+	return
+}
+
+// DownloadFileAfterCounter returns a count of finished DropboxMock.DownloadFile invocations
+func (mmDownloadFile *DropboxMock) DownloadFileAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDownloadFile.afterDownloadFileCounter)
+}
+
+// DownloadFileBeforeCounter returns a count of DropboxMock.DownloadFile invocations
+func (mmDownloadFile *DropboxMock) DownloadFileBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDownloadFile.beforeDownloadFileCounter)
+}
+
+// Calls returns a list of arguments used in each call to DropboxMock.DownloadFile.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmDownloadFile *mDropboxMockDownloadFile) Calls() []*DropboxMockDownloadFileParams {
+	mmDownloadFile.mutex.RLock()
+
+	argCopy := make([]*DropboxMockDownloadFileParams, len(mmDownloadFile.callArgs))
+	copy(argCopy, mmDownloadFile.callArgs)
+
+	mmDownloadFile.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockDownloadFileDone returns true if the count of the DownloadFile invocations corresponds
+// the number of defined expectations
+func (m *DropboxMock) MinimockDownloadFileDone() bool {
+	for _, e := range m.DownloadFileMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DownloadFileMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDownloadFileCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDownloadFile != nil && mm_atomic.LoadUint64(&m.afterDownloadFileCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockDownloadFileInspect logs each unmet expectation
+func (m *DropboxMock) MinimockDownloadFileInspect() {
+	for _, e := range m.DownloadFileMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to DropboxMock.DownloadFile with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DownloadFileMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDownloadFileCounter) < 1 {
+		if m.DownloadFileMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to DropboxMock.DownloadFile")
+		} else {
+			m.t.Errorf("Expected call to DropboxMock.DownloadFile with params: %#v", *m.DownloadFileMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDownloadFile != nil && mm_atomic.LoadUint64(&m.afterDownloadFileCounter) < 1 {
+		m.t.Error("Expected call to DropboxMock.DownloadFile")
+	}
 }
 
 type mDropboxMockGetFiles struct {
@@ -181,6 +408,8 @@ func (m *DropboxMock) MinimockGetFilesInspect() {
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *DropboxMock) MinimockFinish() {
 	if !m.minimockDone() {
+		m.MinimockDownloadFileInspect()
+
 		m.MinimockGetFilesInspect()
 		m.t.FailNow()
 	}
@@ -205,5 +434,6 @@ func (m *DropboxMock) MinimockWait(timeout mm_time.Duration) {
 func (m *DropboxMock) minimockDone() bool {
 	done := true
 	return done &&
+		m.MinimockDownloadFileDone() &&
 		m.MinimockGetFilesDone()
 }
