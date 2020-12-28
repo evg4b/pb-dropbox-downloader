@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/gojuno/minimock/v3 v3.0.8
+	github.com/kelindar/binary v1.0.9
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/segmentio/go-env v1.1.0 // indirect
 	github.com/stretchr/testify v1.3.0

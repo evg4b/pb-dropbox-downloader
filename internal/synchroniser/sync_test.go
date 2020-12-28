@@ -1,6 +1,7 @@
 package synchroniser_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	infs "pb-dropbox-downloader/infrastructure"
@@ -13,30 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var book1 = infs.RemoteFile{
-	Path: "book1.epub",
-	Hash: "00000000000000000000000000000001",
-}
-
-var book2 = infs.RemoteFile{
-	Path: "book2.epub",
-	Hash: "00000000000000000000000000000002",
-}
-
-var book3 = infs.RemoteFile{
-	Path: "book3.epub",
-	Hash: "00000000000000000000000000000003",
-}
-
-var book4 = infs.RemoteFile{
-	Path: "book4.epub",
-	Hash: "00000000000000000000000000000004",
-}
-
-var book5 = infs.RemoteFile{
-	Path: "book5.epub",
-	Hash: "00000000000000000000000000000005",
-}
+var book1 = infs.RemoteFile{Path: "book1.epub", Hash: "00001"}
+var book2 = infs.RemoteFile{Path: "book2.epub", Hash: "00002"}
+var book3 = infs.RemoteFile{Path: "book3.epub", Hash: "00003"}
+var book4 = infs.RemoteFile{Path: "book4.epub", Hash: "00004"}
+var book5 = infs.RemoteFile{Path: "book5.epub", Hash: "00005"}
 
 func TestDropboxSynchroniser_Sync(t *testing.T) {
 	folder := "/mnt/ext1/dropbox"
@@ -61,12 +43,13 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		GetMock.Set(fakeGet).
 		ToMapMock.Return(fakeStorage, nil).
 		FromMapMock.Set(fakeFromMock).
-		KeyExistsMock.Set(fakeExistMock)
+		KeyExistsMock.Set(fakeExistMock).
+		CommitMock.Return(nil)
 
-	dataReader1 := strings.NewReader("This is book #3")
-	dataReader2 := strings.NewReader("This is book #5")
+	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
+	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}).
+		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader1, nil).
 		DownloadFileMock.When(book5.Path).Then(dataReader2, nil)
 
@@ -107,12 +90,13 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		GetMock.Set(fakeGet).
 		ToMapMock.Return(fakeStorage, nil).
 		FromMapMock.Set(fakeFromMock).
-		KeyExistsMock.Set(fakeExistMock)
+		KeyExistsMock.Set(fakeExistMock).
+		CommitMock.Return(nil)
 
-	dataReader1 := strings.NewReader("This is book #3")
-	dataReader2 := strings.NewReader("This is book #5")
+	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
+	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}).
+		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader1, nil).
 		DownloadFileMock.When(book5.Path).Then(dataReader2, nil)
 

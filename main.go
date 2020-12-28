@@ -4,8 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"pb-dropbox-downloader/infrastructure/dropbox"
+	"pb-dropbox-downloader/infrastructure/filesystem"
+	"pb-dropbox-downloader/internal/datastorage"
+	"pb-dropbox-downloader/internal/synchroniser"
 
-	"github.com/tj/go-dropbox"
+	"github.com/kelindar/binary"
+	dropboxLib "github.com/tj/go-dropbox"
 )
 
 // https://www.dropbox.com/oauth2/authorize?client_id=srb8i7o71xkx08c&response_type=code
@@ -24,8 +30,8 @@ func main() {
 
 	json.Unmarshal(data, &config)
 
-	dp := dropbox.New(dropbox.NewConfig(config.AccessToken))
-	account, err := dp.Users.GetCurrentAccount()
+	db := dropboxLib.New(dropboxLib.NewConfig(config.AccessToken))
+	account, err := db.Users.GetCurrentAccount()
 	if err != nil {
 		panic(err)
 	}
@@ -33,4 +39,13 @@ func main() {
 	fmt.Println(account.Name.DisplayName)
 	fmt.Println(account.Email)
 
+	bytes, _ := binary.Marshal(map[string]string{})
+	ioutil.WriteFile("./ddd.bin", bytes, 0775)
+
+	dbClient := dropbox.NewClient(db.Files)
+	fileSystem := filesystem.Local{}
+	storage := datastorage.NewFileStorage(&fileSystem, "./ddd.bin")
+
+	syncer := synchroniser.NewSynchroniser(storage, &fileSystem, dbClient, os.Stdout)
+	syncer.Sync("./data", true)
 }

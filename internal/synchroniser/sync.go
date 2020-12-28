@@ -35,6 +35,11 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 		return err
 	}
 
+	err = db.storage.Commit()
+	if err != nil {
+		return err
+	}
+
 	if remove {
 		filesToDelete := utils.FilterBy(files, db.storage.KeyExists)
 		err = db.delete(folder, filesToDelete)

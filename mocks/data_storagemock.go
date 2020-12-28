@@ -16,6 +16,12 @@ import (
 type DataStorageMock struct {
 	t minimock.Tester
 
+	funcCommit          func() (err error)
+	inspectFuncCommit   func()
+	afterCommitCounter  uint64
+	beforeCommitCounter uint64
+	CommitMock          mDataStorageMockCommit
+
 	funcFromMap          func(m1 map[string]string) (err error)
 	inspectFuncFromMap   func(m1 map[string]string)
 	afterFromMapCounter  uint64
@@ -48,6 +54,8 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 		controller.RegisterMocker(m)
 	}
 
+	m.CommitMock = mDataStorageMockCommit{mock: m}
+
 	m.FromMapMock = mDataStorageMockFromMap{mock: m}
 	m.FromMapMock.callArgs = []*DataStorageMockFromMapParams{}
 
@@ -60,6 +68,149 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 	m.ToMapMock = mDataStorageMockToMap{mock: m}
 
 	return m
+}
+
+type mDataStorageMockCommit struct {
+	mock               *DataStorageMock
+	defaultExpectation *DataStorageMockCommitExpectation
+	expectations       []*DataStorageMockCommitExpectation
+}
+
+// DataStorageMockCommitExpectation specifies expectation struct of the DataStorage.Commit
+type DataStorageMockCommitExpectation struct {
+	mock *DataStorageMock
+
+	results *DataStorageMockCommitResults
+	Counter uint64
+}
+
+// DataStorageMockCommitResults contains results of the DataStorage.Commit
+type DataStorageMockCommitResults struct {
+	err error
+}
+
+// Expect sets up expected params for DataStorage.Commit
+func (mmCommit *mDataStorageMockCommit) Expect() *mDataStorageMockCommit {
+	if mmCommit.mock.funcCommit != nil {
+		mmCommit.mock.t.Fatalf("DataStorageMock.Commit mock is already set by Set")
+	}
+
+	if mmCommit.defaultExpectation == nil {
+		mmCommit.defaultExpectation = &DataStorageMockCommitExpectation{}
+	}
+
+	return mmCommit
+}
+
+// Inspect accepts an inspector function that has same arguments as the DataStorage.Commit
+func (mmCommit *mDataStorageMockCommit) Inspect(f func()) *mDataStorageMockCommit {
+	if mmCommit.mock.inspectFuncCommit != nil {
+		mmCommit.mock.t.Fatalf("Inspect function is already set for DataStorageMock.Commit")
+	}
+
+	mmCommit.mock.inspectFuncCommit = f
+
+	return mmCommit
+}
+
+// Return sets up results that will be returned by DataStorage.Commit
+func (mmCommit *mDataStorageMockCommit) Return(err error) *DataStorageMock {
+	if mmCommit.mock.funcCommit != nil {
+		mmCommit.mock.t.Fatalf("DataStorageMock.Commit mock is already set by Set")
+	}
+
+	if mmCommit.defaultExpectation == nil {
+		mmCommit.defaultExpectation = &DataStorageMockCommitExpectation{mock: mmCommit.mock}
+	}
+	mmCommit.defaultExpectation.results = &DataStorageMockCommitResults{err}
+	return mmCommit.mock
+}
+
+//Set uses given function f to mock the DataStorage.Commit method
+func (mmCommit *mDataStorageMockCommit) Set(f func() (err error)) *DataStorageMock {
+	if mmCommit.defaultExpectation != nil {
+		mmCommit.mock.t.Fatalf("Default expectation is already set for the DataStorage.Commit method")
+	}
+
+	if len(mmCommit.expectations) > 0 {
+		mmCommit.mock.t.Fatalf("Some expectations are already set for the DataStorage.Commit method")
+	}
+
+	mmCommit.mock.funcCommit = f
+	return mmCommit.mock
+}
+
+// Commit implements internal.DataStorage
+func (mmCommit *DataStorageMock) Commit() (err error) {
+	mm_atomic.AddUint64(&mmCommit.beforeCommitCounter, 1)
+	defer mm_atomic.AddUint64(&mmCommit.afterCommitCounter, 1)
+
+	if mmCommit.inspectFuncCommit != nil {
+		mmCommit.inspectFuncCommit()
+	}
+
+	if mmCommit.CommitMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmCommit.CommitMock.defaultExpectation.Counter, 1)
+
+		mm_results := mmCommit.CommitMock.defaultExpectation.results
+		if mm_results == nil {
+			mmCommit.t.Fatal("No results are set for the DataStorageMock.Commit")
+		}
+		return (*mm_results).err
+	}
+	if mmCommit.funcCommit != nil {
+		return mmCommit.funcCommit()
+	}
+	mmCommit.t.Fatalf("Unexpected call to DataStorageMock.Commit.")
+	return
+}
+
+// CommitAfterCounter returns a count of finished DataStorageMock.Commit invocations
+func (mmCommit *DataStorageMock) CommitAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmCommit.afterCommitCounter)
+}
+
+// CommitBeforeCounter returns a count of DataStorageMock.Commit invocations
+func (mmCommit *DataStorageMock) CommitBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmCommit.beforeCommitCounter)
+}
+
+// MinimockCommitDone returns true if the count of the Commit invocations corresponds
+// the number of defined expectations
+func (m *DataStorageMock) MinimockCommitDone() bool {
+	for _, e := range m.CommitMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.CommitMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterCommitCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcCommit != nil && mm_atomic.LoadUint64(&m.afterCommitCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockCommitInspect logs each unmet expectation
+func (m *DataStorageMock) MinimockCommitInspect() {
+	for _, e := range m.CommitMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Error("Expected call to DataStorageMock.Commit")
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.CommitMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterCommitCounter) < 1 {
+		m.t.Error("Expected call to DataStorageMock.Commit")
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcCommit != nil && mm_atomic.LoadUint64(&m.afterCommitCounter) < 1 {
+		m.t.Error("Expected call to DataStorageMock.Commit")
+	}
 }
 
 type mDataStorageMockFromMap struct {
@@ -855,6 +1006,8 @@ func (m *DataStorageMock) MinimockToMapInspect() {
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *DataStorageMock) MinimockFinish() {
 	if !m.minimockDone() {
+		m.MinimockCommitInspect()
+
 		m.MinimockFromMapInspect()
 
 		m.MinimockGetInspect()
@@ -885,6 +1038,7 @@ func (m *DataStorageMock) MinimockWait(timeout mm_time.Duration) {
 func (m *DataStorageMock) minimockDone() bool {
 	done := true
 	return done &&
+		m.MinimockCommitDone() &&
 		m.MinimockFromMapDone() &&
 		m.MinimockGetDone() &&
 		m.MinimockKeyExistsDone() &&

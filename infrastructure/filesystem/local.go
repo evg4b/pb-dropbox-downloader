@@ -2,9 +2,12 @@ package filesystem
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
+
+const perm = 0755
 
 type Local struct {
 }
@@ -23,6 +26,7 @@ func (*Local) GetFilesInFolder(folder string) []string {
 		}
 
 		files = append(files, relativePath)
+
 		return nil
 	})
 
@@ -33,8 +37,9 @@ func (*Local) GetFilesInFolder(folder string) []string {
 	return files
 }
 
+// CopyDataToFile copy data from reader to file
 func (*Local) CopyDataToFile(filePath string, source io.Reader) error {
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0755)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, perm)
 	if err != nil {
 		return err
 	}
@@ -46,6 +51,17 @@ func (*Local) CopyDataToFile(filePath string, source io.Reader) error {
 	return err
 }
 
+// DeleteFile delete file from target filesystem
 func (*Local) DeleteFile(file string) error {
 	return os.Remove(file)
+}
+
+// ReadFile read file content from target filesystem
+func (*Local) ReadFile(filename string) ([]byte, error) {
+	return ioutil.ReadFile(filename)
+}
+
+// WriteFile writes content to file in target filesystem
+func (*Local) WriteFile(filename string, data []byte) error {
+	return ioutil.WriteFile(filename, data, perm)
 }
