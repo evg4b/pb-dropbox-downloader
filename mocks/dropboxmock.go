@@ -18,13 +18,13 @@ import (
 type DropboxMock struct {
 	t minimock.Tester
 
-	funcDownloadFile          func(s1 string) (r1 io.Reader, err error)
+	funcDownloadFile          func(s1 string) (r1 io.ReadCloser, err error)
 	inspectFuncDownloadFile   func(s1 string)
 	afterDownloadFileCounter  uint64
 	beforeDownloadFileCounter uint64
 	DownloadFileMock          mDropboxMockDownloadFile
 
-	funcGetFiles          func() (ra1 []mm_infrastructure.RemoteFile)
+	funcGetFiles          func() (ra1 []mm_infrastructure.RemoteFile, err error)
 	inspectFuncGetFiles   func()
 	afterGetFilesCounter  uint64
 	beforeGetFilesCounter uint64
@@ -70,7 +70,7 @@ type DropboxMockDownloadFileParams struct {
 
 // DropboxMockDownloadFileResults contains results of the Dropbox.DownloadFile
 type DropboxMockDownloadFileResults struct {
-	r1  io.Reader
+	r1  io.ReadCloser
 	err error
 }
 
@@ -106,7 +106,7 @@ func (mmDownloadFile *mDropboxMockDownloadFile) Inspect(f func(s1 string)) *mDro
 }
 
 // Return sets up results that will be returned by Dropbox.DownloadFile
-func (mmDownloadFile *mDropboxMockDownloadFile) Return(r1 io.Reader, err error) *DropboxMock {
+func (mmDownloadFile *mDropboxMockDownloadFile) Return(r1 io.ReadCloser, err error) *DropboxMock {
 	if mmDownloadFile.mock.funcDownloadFile != nil {
 		mmDownloadFile.mock.t.Fatalf("DropboxMock.DownloadFile mock is already set by Set")
 	}
@@ -119,7 +119,7 @@ func (mmDownloadFile *mDropboxMockDownloadFile) Return(r1 io.Reader, err error) 
 }
 
 //Set uses given function f to mock the Dropbox.DownloadFile method
-func (mmDownloadFile *mDropboxMockDownloadFile) Set(f func(s1 string) (r1 io.Reader, err error)) *DropboxMock {
+func (mmDownloadFile *mDropboxMockDownloadFile) Set(f func(s1 string) (r1 io.ReadCloser, err error)) *DropboxMock {
 	if mmDownloadFile.defaultExpectation != nil {
 		mmDownloadFile.mock.t.Fatalf("Default expectation is already set for the Dropbox.DownloadFile method")
 	}
@@ -148,13 +148,13 @@ func (mmDownloadFile *mDropboxMockDownloadFile) When(s1 string) *DropboxMockDown
 }
 
 // Then sets up Dropbox.DownloadFile return parameters for the expectation previously defined by the When method
-func (e *DropboxMockDownloadFileExpectation) Then(r1 io.Reader, err error) *DropboxMock {
+func (e *DropboxMockDownloadFileExpectation) Then(r1 io.ReadCloser, err error) *DropboxMock {
 	e.results = &DropboxMockDownloadFileResults{r1, err}
 	return e.mock
 }
 
 // DownloadFile implements infrastructure.Dropbox
-func (mmDownloadFile *DropboxMock) DownloadFile(s1 string) (r1 io.Reader, err error) {
+func (mmDownloadFile *DropboxMock) DownloadFile(s1 string) (r1 io.ReadCloser, err error) {
 	mm_atomic.AddUint64(&mmDownloadFile.beforeDownloadFileCounter, 1)
 	defer mm_atomic.AddUint64(&mmDownloadFile.afterDownloadFileCounter, 1)
 
@@ -279,6 +279,7 @@ type DropboxMockGetFilesExpectation struct {
 // DropboxMockGetFilesResults contains results of the Dropbox.GetFiles
 type DropboxMockGetFilesResults struct {
 	ra1 []mm_infrastructure.RemoteFile
+	err error
 }
 
 // Expect sets up expected params for Dropbox.GetFiles
@@ -306,7 +307,7 @@ func (mmGetFiles *mDropboxMockGetFiles) Inspect(f func()) *mDropboxMockGetFiles 
 }
 
 // Return sets up results that will be returned by Dropbox.GetFiles
-func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []mm_infrastructure.RemoteFile) *DropboxMock {
+func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []mm_infrastructure.RemoteFile, err error) *DropboxMock {
 	if mmGetFiles.mock.funcGetFiles != nil {
 		mmGetFiles.mock.t.Fatalf("DropboxMock.GetFiles mock is already set by Set")
 	}
@@ -314,12 +315,12 @@ func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []mm_infrastructure.RemoteFil
 	if mmGetFiles.defaultExpectation == nil {
 		mmGetFiles.defaultExpectation = &DropboxMockGetFilesExpectation{mock: mmGetFiles.mock}
 	}
-	mmGetFiles.defaultExpectation.results = &DropboxMockGetFilesResults{ra1}
+	mmGetFiles.defaultExpectation.results = &DropboxMockGetFilesResults{ra1, err}
 	return mmGetFiles.mock
 }
 
 //Set uses given function f to mock the Dropbox.GetFiles method
-func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []mm_infrastructure.RemoteFile)) *DropboxMock {
+func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []mm_infrastructure.RemoteFile, err error)) *DropboxMock {
 	if mmGetFiles.defaultExpectation != nil {
 		mmGetFiles.mock.t.Fatalf("Default expectation is already set for the Dropbox.GetFiles method")
 	}
@@ -333,7 +334,7 @@ func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []mm_infrastructure.Re
 }
 
 // GetFiles implements infrastructure.Dropbox
-func (mmGetFiles *DropboxMock) GetFiles() (ra1 []mm_infrastructure.RemoteFile) {
+func (mmGetFiles *DropboxMock) GetFiles() (ra1 []mm_infrastructure.RemoteFile, err error) {
 	mm_atomic.AddUint64(&mmGetFiles.beforeGetFilesCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetFiles.afterGetFilesCounter, 1)
 
@@ -348,7 +349,7 @@ func (mmGetFiles *DropboxMock) GetFiles() (ra1 []mm_infrastructure.RemoteFile) {
 		if mm_results == nil {
 			mmGetFiles.t.Fatal("No results are set for the DropboxMock.GetFiles")
 		}
-		return (*mm_results).ra1
+		return (*mm_results).ra1, (*mm_results).err
 	}
 	if mmGetFiles.funcGetFiles != nil {
 		return mmGetFiles.funcGetFiles()

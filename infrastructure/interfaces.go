@@ -18,6 +18,6 @@ type RemoteFile struct {
 
 type Dropbox interface {
 	// GetFiles return relative file paths in folder (include subfolder to)
-	GetFiles() []RemoteFile
-	DownloadFile(string) (io.Reader, error)
+	GetFiles() ([]RemoteFile, error)
+	DownloadFile(string) (io.ReadCloser, error)
 }

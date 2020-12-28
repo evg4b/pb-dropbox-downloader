@@ -53,6 +53,8 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 			continue
 		}
 
+		defer fileReader.Close()
+
 		err = db.files.CopyDataToFile(path.Join(folder, file.Path), fileReader)
 		if err != nil {
 			db.printf("%s .... [filed]", file.Path)

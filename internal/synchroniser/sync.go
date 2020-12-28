@@ -14,7 +14,11 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 		return err
 	}
 
-	remotesFiles := db.dropbox.GetFiles()
+	remotesFiles, err := db.dropbox.GetFiles()
+	if err != nil {
+		return err
+	}
+
 	filesToDownload := []infrastructure.RemoteFile{}
 	for _, remoteFile := range remotesFiles {
 		if hash, ok := db.storage.Get(remoteFile.Path); ok {
