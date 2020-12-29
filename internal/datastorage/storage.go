@@ -107,3 +107,10 @@ func (storage *FileStorage) preload() error {
 
 	return nil
 }
+
+func (storage *FileStorage) Add(key, value string) {
+	storage.mu.Lock()
+	defer storage.mu.Unlock()
+
+	storage.data[key] = value
+}

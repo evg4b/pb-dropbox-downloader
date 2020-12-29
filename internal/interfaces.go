@@ -7,4 +7,5 @@ type DataStorage interface {
 	FromMap(map[string]string) error
 	KeyExists(string) bool
 	Commit() error
+	Add(string, string)
 }

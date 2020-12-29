@@ -10,7 +10,6 @@ import (
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/synchroniser"
 
-	"github.com/kelindar/binary"
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
@@ -38,9 +37,6 @@ func main() {
 
 	fmt.Println(account.Name.DisplayName)
 	fmt.Println(account.Email)
-
-	bytes, _ := binary.Marshal(map[string]string{})
-	ioutil.WriteFile("./ddd.bin", bytes, 0775)
 
 	dbClient := dropbox.NewClient(db.Files)
 	fileSystem := filesystem.Local{}

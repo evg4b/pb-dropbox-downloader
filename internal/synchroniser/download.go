@@ -64,5 +64,6 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 		}
 
 		db.printf("%s .... [ok]", file.Path)
+		db.storage.Add(file.Path, file.Hash)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -14,6 +15,10 @@ type Local struct {
 
 // GetFilesInFolder return relative file paths in folder (include subfolder to)
 func (*Local) GetFilesInFolder(folder string) []string {
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		return []string{}
+	}
+
 	files := []string{}
 	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -38,8 +43,9 @@ func (*Local) GetFilesInFolder(folder string) []string {
 }
 
 // CopyDataToFile copy data from reader to file
-func (*Local) CopyDataToFile(filePath string, source io.Reader) error {
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, perm)
+func (*Local) CopyDataToFile(filename string, source io.Reader) error {
+	mkdirIfNotExistDir(filename)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, perm)
 	if err != nil {
 		return err
 	}
@@ -63,5 +69,15 @@ func (*Local) ReadFile(filename string) ([]byte, error) {
 
 // WriteFile writes content to file in target filesystem
 func (*Local) WriteFile(filename string, data []byte) error {
+	mkdirIfNotExistDir(filename)
 	return ioutil.WriteFile(filename, data, perm)
+}
+
+func mkdirIfNotExistDir(filename string) {
+	dir := path.Dir(filename)
+	if len(dir) > 0 {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			os.Mkdir(dir, perm)
+		}
+	}
 }
