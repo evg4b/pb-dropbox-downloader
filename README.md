@@ -18,4 +18,7 @@
     <a href="https://goreportcard.com/report/github.com/evg4b/pb-dropbox-downloader">
         <img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/evg4b/pb-dropbox-downloader">
     </a>
+    <a href="https://app.codecov.io/gh/evg4b/pb-dropbox-downloader">
+        <img alt="Codecov" src="https://img.shields.io/codecov/c/gh/evg4b/pb-dropbox-downloader">
+    </a>
 </p>
