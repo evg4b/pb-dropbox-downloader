@@ -16,6 +16,12 @@ import (
 type DataStorageMock struct {
 	t minimock.Tester
 
+	funcAdd          func(s1 string, s2 string)
+	inspectFuncAdd   func(s1 string, s2 string)
+	afterAddCounter  uint64
+	beforeAddCounter uint64
+	AddMock          mDataStorageMockAdd
+
 	funcCommit          func() (err error)
 	inspectFuncCommit   func()
 	afterCommitCounter  uint64
@@ -54,6 +60,9 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 		controller.RegisterMocker(m)
 	}
 
+	m.AddMock = mDataStorageMockAdd{mock: m}
+	m.AddMock.callArgs = []*DataStorageMockAddParams{}
+
 	m.CommitMock = mDataStorageMockCommit{mock: m}
 
 	m.FromMapMock = mDataStorageMockFromMap{mock: m}
@@ -68,6 +77,194 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 	m.ToMapMock = mDataStorageMockToMap{mock: m}
 
 	return m
+}
+
+type mDataStorageMockAdd struct {
+	mock               *DataStorageMock
+	defaultExpectation *DataStorageMockAddExpectation
+	expectations       []*DataStorageMockAddExpectation
+
+	callArgs []*DataStorageMockAddParams
+	mutex    sync.RWMutex
+}
+
+// DataStorageMockAddExpectation specifies expectation struct of the DataStorage.Add
+type DataStorageMockAddExpectation struct {
+	mock   *DataStorageMock
+	params *DataStorageMockAddParams
+
+	Counter uint64
+}
+
+// DataStorageMockAddParams contains parameters of the DataStorage.Add
+type DataStorageMockAddParams struct {
+	s1 string
+	s2 string
+}
+
+// Expect sets up expected params for DataStorage.Add
+func (mmAdd *mDataStorageMockAdd) Expect(s1 string, s2 string) *mDataStorageMockAdd {
+	if mmAdd.mock.funcAdd != nil {
+		mmAdd.mock.t.Fatalf("DataStorageMock.Add mock is already set by Set")
+	}
+
+	if mmAdd.defaultExpectation == nil {
+		mmAdd.defaultExpectation = &DataStorageMockAddExpectation{}
+	}
+
+	mmAdd.defaultExpectation.params = &DataStorageMockAddParams{s1, s2}
+	for _, e := range mmAdd.expectations {
+		if minimock.Equal(e.params, mmAdd.defaultExpectation.params) {
+			mmAdd.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmAdd.defaultExpectation.params)
+		}
+	}
+
+	return mmAdd
+}
+
+// Inspect accepts an inspector function that has same arguments as the DataStorage.Add
+func (mmAdd *mDataStorageMockAdd) Inspect(f func(s1 string, s2 string)) *mDataStorageMockAdd {
+	if mmAdd.mock.inspectFuncAdd != nil {
+		mmAdd.mock.t.Fatalf("Inspect function is already set for DataStorageMock.Add")
+	}
+
+	mmAdd.mock.inspectFuncAdd = f
+
+	return mmAdd
+}
+
+// Return sets up results that will be returned by DataStorage.Add
+func (mmAdd *mDataStorageMockAdd) Return() *DataStorageMock {
+	if mmAdd.mock.funcAdd != nil {
+		mmAdd.mock.t.Fatalf("DataStorageMock.Add mock is already set by Set")
+	}
+
+	if mmAdd.defaultExpectation == nil {
+		mmAdd.defaultExpectation = &DataStorageMockAddExpectation{mock: mmAdd.mock}
+	}
+
+	return mmAdd.mock
+}
+
+//Set uses given function f to mock the DataStorage.Add method
+func (mmAdd *mDataStorageMockAdd) Set(f func(s1 string, s2 string)) *DataStorageMock {
+	if mmAdd.defaultExpectation != nil {
+		mmAdd.mock.t.Fatalf("Default expectation is already set for the DataStorage.Add method")
+	}
+
+	if len(mmAdd.expectations) > 0 {
+		mmAdd.mock.t.Fatalf("Some expectations are already set for the DataStorage.Add method")
+	}
+
+	mmAdd.mock.funcAdd = f
+	return mmAdd.mock
+}
+
+// Add implements internal.DataStorage
+func (mmAdd *DataStorageMock) Add(s1 string, s2 string) {
+	mm_atomic.AddUint64(&mmAdd.beforeAddCounter, 1)
+	defer mm_atomic.AddUint64(&mmAdd.afterAddCounter, 1)
+
+	if mmAdd.inspectFuncAdd != nil {
+		mmAdd.inspectFuncAdd(s1, s2)
+	}
+
+	mm_params := &DataStorageMockAddParams{s1, s2}
+
+	// Record call args
+	mmAdd.AddMock.mutex.Lock()
+	mmAdd.AddMock.callArgs = append(mmAdd.AddMock.callArgs, mm_params)
+	mmAdd.AddMock.mutex.Unlock()
+
+	for _, e := range mmAdd.AddMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return
+		}
+	}
+
+	if mmAdd.AddMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmAdd.AddMock.defaultExpectation.Counter, 1)
+		mm_want := mmAdd.AddMock.defaultExpectation.params
+		mm_got := DataStorageMockAddParams{s1, s2}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmAdd.t.Errorf("DataStorageMock.Add got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		return
+
+	}
+	if mmAdd.funcAdd != nil {
+		mmAdd.funcAdd(s1, s2)
+		return
+	}
+	mmAdd.t.Fatalf("Unexpected call to DataStorageMock.Add. %v %v", s1, s2)
+
+}
+
+// AddAfterCounter returns a count of finished DataStorageMock.Add invocations
+func (mmAdd *DataStorageMock) AddAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmAdd.afterAddCounter)
+}
+
+// AddBeforeCounter returns a count of DataStorageMock.Add invocations
+func (mmAdd *DataStorageMock) AddBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmAdd.beforeAddCounter)
+}
+
+// Calls returns a list of arguments used in each call to DataStorageMock.Add.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmAdd *mDataStorageMockAdd) Calls() []*DataStorageMockAddParams {
+	mmAdd.mutex.RLock()
+
+	argCopy := make([]*DataStorageMockAddParams, len(mmAdd.callArgs))
+	copy(argCopy, mmAdd.callArgs)
+
+	mmAdd.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockAddDone returns true if the count of the Add invocations corresponds
+// the number of defined expectations
+func (m *DataStorageMock) MinimockAddDone() bool {
+	for _, e := range m.AddMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.AddMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterAddCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcAdd != nil && mm_atomic.LoadUint64(&m.afterAddCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockAddInspect logs each unmet expectation
+func (m *DataStorageMock) MinimockAddInspect() {
+	for _, e := range m.AddMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to DataStorageMock.Add with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.AddMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterAddCounter) < 1 {
+		if m.AddMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to DataStorageMock.Add")
+		} else {
+			m.t.Errorf("Expected call to DataStorageMock.Add with params: %#v", *m.AddMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcAdd != nil && mm_atomic.LoadUint64(&m.afterAddCounter) < 1 {
+		m.t.Error("Expected call to DataStorageMock.Add")
+	}
 }
 
 type mDataStorageMockCommit struct {
@@ -1006,6 +1203,8 @@ func (m *DataStorageMock) MinimockToMapInspect() {
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *DataStorageMock) MinimockFinish() {
 	if !m.minimockDone() {
+		m.MinimockAddInspect()
+
 		m.MinimockCommitInspect()
 
 		m.MinimockFromMapInspect()
@@ -1038,6 +1237,7 @@ func (m *DataStorageMock) MinimockWait(timeout mm_time.Duration) {
 func (m *DataStorageMock) minimockDone() bool {
 	done := true
 	return done &&
+		m.MinimockAddDone() &&
 		m.MinimockCommitDone() &&
 		m.MinimockFromMapDone() &&
 		m.MinimockGetDone() &&

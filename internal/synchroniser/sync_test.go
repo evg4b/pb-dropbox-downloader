@@ -44,7 +44,8 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		ToMapMock.Return(fakeStorage, nil).
 		FromMapMock.Set(fakeFromMock).
 		KeyExistsMock.Set(fakeExistMock).
-		CommitMock.Return(nil)
+		CommitMock.Return(nil).
+		AddMock.Return()
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
 	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
@@ -91,7 +92,8 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		ToMapMock.Return(fakeStorage, nil).
 		FromMapMock.Set(fakeFromMock).
 		KeyExistsMock.Set(fakeExistMock).
-		CommitMock.Return(nil)
+		CommitMock.Return(nil).
+		AddMock.Return()
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
 	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
