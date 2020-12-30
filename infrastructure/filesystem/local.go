@@ -13,6 +13,10 @@ const perm = 0755
 type Local struct {
 }
 
+func NewFileSystem() *Local {
+	return &Local{}
+}
+
 // GetFilesInFolder return relative file paths in folder (include subfolder to)
 func (*Local) GetFilesInFolder(folder string) []string {
 	if _, err := os.Stat(folder); os.IsNotExist(err) {

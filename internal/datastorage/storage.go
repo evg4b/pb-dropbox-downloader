@@ -1,6 +1,7 @@
 package datastorage
 
 import (
+	"os"
 	"pb-dropbox-downloader/infrastructure"
 	"sync"
 
@@ -84,6 +85,21 @@ func (storage *FileStorage) Commit() error {
 
 	return storage.unload()
 }
+
+func (storage *FileStorage) Add(key, value string) {
+	storage.mu.Lock()
+	defer storage.mu.Unlock()
+
+	storage.data[key] = value
+}
+
+func (storage *FileStorage) Remove(key string) {
+	storage.mu.Lock()
+	defer storage.mu.Unlock()
+
+	delete(storage.data, key)
+}
+
 func (storage *FileStorage) unload() error {
 	data, err := binary.Marshal(storage.data)
 	if err != nil {
@@ -98,6 +114,10 @@ func (storage *FileStorage) preload() error {
 		storage.data = make(map[string]string)
 
 		data, err := storage.files.ReadFile(storage.configPath)
+		if os.IsNotExist(err) {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
@@ -106,11 +126,4 @@ func (storage *FileStorage) preload() error {
 	}
 
 	return nil
-}
-
-func (storage *FileStorage) Add(key, value string) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
-
-	storage.data[key] = value
 }

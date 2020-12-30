@@ -18,13 +18,16 @@ type FileSystem interface {
 	WriteFile(filename string, data []byte) error
 }
 
+// RemoteFile is structure to describe file in dropbox
 type RemoteFile struct {
 	Path string
 	Hash string
 }
 
+// Dropbox is intereface to dropbox client wrapper
 type Dropbox interface {
-	// GetFiles return relative file paths in folder (include subfolder to)
+	// GetFiles returns files in application folder (include subfolder to)
 	GetFiles() ([]RemoteFile, error)
+	// DownloadFile downloaded file by path
 	DownloadFile(string) (io.ReadCloser, error)
 }

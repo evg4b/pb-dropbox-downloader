@@ -9,14 +9,17 @@ import (
 
 const rootDir = "/"
 
+// Client is main structure to dropbox client wrapper
 type Client struct {
-	files DropboxFiles
+	files dropboxFiles
 }
 
-func NewClient(db DropboxFiles) *Client {
+// NewClient creates new instance of dropbox client wrapper
+func NewClient(db dropboxFiles) *Client {
 	return &Client{db}
 }
 
+// GetFiles returns files in application folder (include subfolder to)
 func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 	out, err := client.files.ListFolder(&dropbox.ListFolderInput{
 		Path:      rootDir,
@@ -38,6 +41,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 	return mappedFiles, nil
 }
 
+// DownloadFile downloaded file by path
 func (client *Client) DownloadFile(path string) (io.ReadCloser, error) {
 	out, err := client.files.Download(&dropbox.DownloadInput{
 		Path: path,

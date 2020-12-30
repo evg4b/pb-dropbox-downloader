@@ -22,12 +22,13 @@ func NewSynchroniser(
 	files infrastructure.FileSystem,
 	dropbox infrastructure.Dropbox,
 	output io.Writer,
+	maxParallelism int,
 ) *DropboxSynchroniser {
 	return &DropboxSynchroniser{
 		storage:        storage,
 		files:          files,
 		dropbox:        dropbox,
-		maxParallelism: 3,
+		maxParallelism: maxParallelism,
 		output:         output,
 	}
 }

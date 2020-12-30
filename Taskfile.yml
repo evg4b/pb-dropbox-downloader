@@ -1,10 +1,14 @@
 version: '3'
 
 tasks:
-  default:
+  default: go run .
+
+  build: 
     env:
       GOOS: linux
       GOARCH: arm
       GOARM: 5
     cmds:
-      - go build -ldflags="-s -w" -o pb-dropbox-downloader.app ./main.go
+      - go build -ldflags="-s -w" -o pb-dropbox-downloader.app .
+
+  test: go test ./...

@@ -8,4 +8,5 @@ type DataStorage interface {
 	KeyExists(string) bool
 	Commit() error
 	Add(string, string)
+	Remove(string)
 }

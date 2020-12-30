@@ -2,7 +2,6 @@ package synchroniser_test
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 	infs "pb-dropbox-downloader/infrastructure"
 	sync "pb-dropbox-downloader/internal/synchroniser"
@@ -45,7 +44,8 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		FromMapMock.Set(fakeFromMock).
 		KeyExistsMock.Set(fakeExistMock).
 		CommitMock.Return(nil).
-		AddMock.Return()
+		AddMock.Return().
+		RemoveMock.Return()
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
 	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
@@ -61,7 +61,7 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		DeleteFileMock.When(path.Join(folder, book1.Path)).Then(nil).
 		DeleteFileMock.When(path.Join(folder, book2.Path)).Then(nil)
 
-	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, os.Stdout)
+	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 
 	err := synchroniser.Sync(folder, true)
 
@@ -93,7 +93,8 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		FromMapMock.Set(fakeFromMock).
 		KeyExistsMock.Set(fakeExistMock).
 		CommitMock.Return(nil).
-		AddMock.Return()
+		AddMock.Return().
+		RemoveMock.Return()
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
 	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
@@ -107,7 +108,7 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		CopyDataToFileMock.When(path.Join(folder, book3.Path), dataReader1).Then(nil).
 		CopyDataToFileMock.When(path.Join(folder, book5.Path), dataReader2).Then(nil)
 
-	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, os.Stdout)
+	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 
 	err := synchroniser.Sync(folder, false)
 

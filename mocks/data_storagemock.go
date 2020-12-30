@@ -46,6 +46,12 @@ type DataStorageMock struct {
 	beforeKeyExistsCounter uint64
 	KeyExistsMock          mDataStorageMockKeyExists
 
+	funcRemove          func(s1 string)
+	inspectFuncRemove   func(s1 string)
+	afterRemoveCounter  uint64
+	beforeRemoveCounter uint64
+	RemoveMock          mDataStorageMockRemove
+
 	funcToMap          func() (m1 map[string]string, err error)
 	inspectFuncToMap   func()
 	afterToMapCounter  uint64
@@ -73,6 +79,9 @@ func NewDataStorageMock(t minimock.Tester) *DataStorageMock {
 
 	m.KeyExistsMock = mDataStorageMockKeyExists{mock: m}
 	m.KeyExistsMock.callArgs = []*DataStorageMockKeyExistsParams{}
+
+	m.RemoveMock = mDataStorageMockRemove{mock: m}
+	m.RemoveMock.callArgs = []*DataStorageMockRemoveParams{}
 
 	m.ToMapMock = mDataStorageMockToMap{mock: m}
 
@@ -1056,6 +1065,193 @@ func (m *DataStorageMock) MinimockKeyExistsInspect() {
 	}
 }
 
+type mDataStorageMockRemove struct {
+	mock               *DataStorageMock
+	defaultExpectation *DataStorageMockRemoveExpectation
+	expectations       []*DataStorageMockRemoveExpectation
+
+	callArgs []*DataStorageMockRemoveParams
+	mutex    sync.RWMutex
+}
+
+// DataStorageMockRemoveExpectation specifies expectation struct of the DataStorage.Remove
+type DataStorageMockRemoveExpectation struct {
+	mock   *DataStorageMock
+	params *DataStorageMockRemoveParams
+
+	Counter uint64
+}
+
+// DataStorageMockRemoveParams contains parameters of the DataStorage.Remove
+type DataStorageMockRemoveParams struct {
+	s1 string
+}
+
+// Expect sets up expected params for DataStorage.Remove
+func (mmRemove *mDataStorageMockRemove) Expect(s1 string) *mDataStorageMockRemove {
+	if mmRemove.mock.funcRemove != nil {
+		mmRemove.mock.t.Fatalf("DataStorageMock.Remove mock is already set by Set")
+	}
+
+	if mmRemove.defaultExpectation == nil {
+		mmRemove.defaultExpectation = &DataStorageMockRemoveExpectation{}
+	}
+
+	mmRemove.defaultExpectation.params = &DataStorageMockRemoveParams{s1}
+	for _, e := range mmRemove.expectations {
+		if minimock.Equal(e.params, mmRemove.defaultExpectation.params) {
+			mmRemove.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmRemove.defaultExpectation.params)
+		}
+	}
+
+	return mmRemove
+}
+
+// Inspect accepts an inspector function that has same arguments as the DataStorage.Remove
+func (mmRemove *mDataStorageMockRemove) Inspect(f func(s1 string)) *mDataStorageMockRemove {
+	if mmRemove.mock.inspectFuncRemove != nil {
+		mmRemove.mock.t.Fatalf("Inspect function is already set for DataStorageMock.Remove")
+	}
+
+	mmRemove.mock.inspectFuncRemove = f
+
+	return mmRemove
+}
+
+// Return sets up results that will be returned by DataStorage.Remove
+func (mmRemove *mDataStorageMockRemove) Return() *DataStorageMock {
+	if mmRemove.mock.funcRemove != nil {
+		mmRemove.mock.t.Fatalf("DataStorageMock.Remove mock is already set by Set")
+	}
+
+	if mmRemove.defaultExpectation == nil {
+		mmRemove.defaultExpectation = &DataStorageMockRemoveExpectation{mock: mmRemove.mock}
+	}
+
+	return mmRemove.mock
+}
+
+//Set uses given function f to mock the DataStorage.Remove method
+func (mmRemove *mDataStorageMockRemove) Set(f func(s1 string)) *DataStorageMock {
+	if mmRemove.defaultExpectation != nil {
+		mmRemove.mock.t.Fatalf("Default expectation is already set for the DataStorage.Remove method")
+	}
+
+	if len(mmRemove.expectations) > 0 {
+		mmRemove.mock.t.Fatalf("Some expectations are already set for the DataStorage.Remove method")
+	}
+
+	mmRemove.mock.funcRemove = f
+	return mmRemove.mock
+}
+
+// Remove implements internal.DataStorage
+func (mmRemove *DataStorageMock) Remove(s1 string) {
+	mm_atomic.AddUint64(&mmRemove.beforeRemoveCounter, 1)
+	defer mm_atomic.AddUint64(&mmRemove.afterRemoveCounter, 1)
+
+	if mmRemove.inspectFuncRemove != nil {
+		mmRemove.inspectFuncRemove(s1)
+	}
+
+	mm_params := &DataStorageMockRemoveParams{s1}
+
+	// Record call args
+	mmRemove.RemoveMock.mutex.Lock()
+	mmRemove.RemoveMock.callArgs = append(mmRemove.RemoveMock.callArgs, mm_params)
+	mmRemove.RemoveMock.mutex.Unlock()
+
+	for _, e := range mmRemove.RemoveMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return
+		}
+	}
+
+	if mmRemove.RemoveMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmRemove.RemoveMock.defaultExpectation.Counter, 1)
+		mm_want := mmRemove.RemoveMock.defaultExpectation.params
+		mm_got := DataStorageMockRemoveParams{s1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmRemove.t.Errorf("DataStorageMock.Remove got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		return
+
+	}
+	if mmRemove.funcRemove != nil {
+		mmRemove.funcRemove(s1)
+		return
+	}
+	mmRemove.t.Fatalf("Unexpected call to DataStorageMock.Remove. %v", s1)
+
+}
+
+// RemoveAfterCounter returns a count of finished DataStorageMock.Remove invocations
+func (mmRemove *DataStorageMock) RemoveAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRemove.afterRemoveCounter)
+}
+
+// RemoveBeforeCounter returns a count of DataStorageMock.Remove invocations
+func (mmRemove *DataStorageMock) RemoveBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRemove.beforeRemoveCounter)
+}
+
+// Calls returns a list of arguments used in each call to DataStorageMock.Remove.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmRemove *mDataStorageMockRemove) Calls() []*DataStorageMockRemoveParams {
+	mmRemove.mutex.RLock()
+
+	argCopy := make([]*DataStorageMockRemoveParams, len(mmRemove.callArgs))
+	copy(argCopy, mmRemove.callArgs)
+
+	mmRemove.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockRemoveDone returns true if the count of the Remove invocations corresponds
+// the number of defined expectations
+func (m *DataStorageMock) MinimockRemoveDone() bool {
+	for _, e := range m.RemoveMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RemoveMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRemoveCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRemove != nil && mm_atomic.LoadUint64(&m.afterRemoveCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockRemoveInspect logs each unmet expectation
+func (m *DataStorageMock) MinimockRemoveInspect() {
+	for _, e := range m.RemoveMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to DataStorageMock.Remove with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RemoveMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRemoveCounter) < 1 {
+		if m.RemoveMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to DataStorageMock.Remove")
+		} else {
+			m.t.Errorf("Expected call to DataStorageMock.Remove with params: %#v", *m.RemoveMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRemove != nil && mm_atomic.LoadUint64(&m.afterRemoveCounter) < 1 {
+		m.t.Error("Expected call to DataStorageMock.Remove")
+	}
+}
+
 type mDataStorageMockToMap struct {
 	mock               *DataStorageMock
 	defaultExpectation *DataStorageMockToMapExpectation
@@ -1213,6 +1409,8 @@ func (m *DataStorageMock) MinimockFinish() {
 
 		m.MinimockKeyExistsInspect()
 
+		m.MinimockRemoveInspect()
+
 		m.MinimockToMapInspect()
 		m.t.FailNow()
 	}
@@ -1242,5 +1440,6 @@ func (m *DataStorageMock) minimockDone() bool {
 		m.MinimockFromMapDone() &&
 		m.MinimockGetDone() &&
 		m.MinimockKeyExistsDone() &&
+		m.MinimockRemoveDone() &&
 		m.MinimockToMapDone()
 }

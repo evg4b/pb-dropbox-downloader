@@ -1,0 +1,6 @@
+{
+    "access_token": "<your access token>",
+    "folder" : "./dropbox",
+    "allow_delete_files": true,
+    "on_sd_card": false
+}

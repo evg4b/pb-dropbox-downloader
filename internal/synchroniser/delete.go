@@ -17,6 +17,7 @@ func (db *DropboxSynchroniser) delete(folder string, files []string) error {
 		}
 
 		fmt.Fprintln(db.output, fmt.Sprintf("%s .... [ok]", file))
+		db.storage.Remove(file)
 	}
 
 	return nil

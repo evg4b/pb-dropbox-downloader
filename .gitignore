@@ -6,10 +6,13 @@
 *.dylib
 *.app
 *.bin
+.vscode
+*.log
 __debug_bin
 
 # Test binary, built with `go test -c`
 *.test
+testdata
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
