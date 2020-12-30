@@ -41,7 +41,7 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	}
 
 	if remove {
-		filesToDelete := utils.FilterBy(files, db.storage.KeyExists)
+		filesToDelete := utils.FilterSliceBy(files, db.storage.KeyExists)
 		err = db.delete(folder, filesToDelete)
 		if err != nil {
 			return err
@@ -58,7 +58,7 @@ func (db *DropboxSynchroniser) refreshStorage(files []string) error {
 	}
 
 	filteredMap := utils.FilterMapBy(storageMap, func(key, _ string) bool {
-		return utils.Contins(files, key)
+		return utils.SliceContins(files, key)
 	})
 
 	return db.storage.FromMap(filteredMap)

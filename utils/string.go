@@ -2,8 +2,8 @@ package utils
 
 import "strings"
 
-// FilterBy filters slice of strings  by predicate
-func FilterBy(collection []string, predicate func(string) bool) []string {
+// FilterSliceBy filters slice of strings by predicate
+func FilterSliceBy(collection []string, predicate func(string) bool) []string {
 	result := []string{}
 	for _, item := range collection {
 		if predicate(item) {
@@ -14,7 +14,8 @@ func FilterBy(collection []string, predicate func(string) bool) []string {
 	return result
 }
 
-func Contins(collection []string, value string) bool {
+// SliceContins checks if slice contains passed value
+func SliceContins(collection []string, value string) bool {
 	for _, item := range collection {
 		if strings.EqualFold(item, value) {
 			return true
