@@ -15,9 +15,9 @@ import (
 
 const fatalExitCode = 500
 const parallelism = 3
-const logFileName = "demo.log"
-const databaseFileName = "data.bin"
-const configFileName = "demo.json"
+const logFileName = "pb-dropbox-downloader.log"
+const databaseFileName = "pb-dropbox-downloader.bin"
+const configFileName = "pb-dropbox-downloader-config.json"
 
 type pbSyncConfig struct {
 	AccessToken      string `json:"access_token"`
@@ -26,8 +26,8 @@ type pbSyncConfig struct {
 	OnSdCard         bool   `json:"on_sd_card"`
 }
 
-func openLogFile() (*os.File, error) {
-	return os.OpenFile(logFileName, os.O_CREATE|os.O_APPEND, 0755)
+func openLogFile(filename string) (*os.File, error) {
+	return os.OpenFile(filename, os.O_CREATE|os.O_APPEND, 0755)
 }
 
 func createSynchroniser(accessToken string, database string) (*synchroniser.DropboxSynchroniser, error) {

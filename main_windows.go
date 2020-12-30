@@ -10,7 +10,7 @@ import (
 func main() {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
 
-	logfile, err := openLogFile()
+	logfile, err := openLogFile(path.Join("./testdata", logFileName))
 	if err != nil {
 		panic(err)
 	}
@@ -18,12 +18,12 @@ func main() {
 	defer logfile.Close()
 	log.SetOutput(logfile)
 
-	config, err := loadConfig("./testdata/config.json")
+	config, err := loadConfig(path.Join("./testdata", configFileName))
 	if err != nil {
 		panic(err)
 	}
 
-	synchroniser, err := createSynchroniser(config.AccessToken, "./testdata/data.bin")
+	synchroniser, err := createSynchroniser(config.AccessToken, path.Join("./testdata", databaseFileName))
 	if err != nil {
 		panic(err)
 	}

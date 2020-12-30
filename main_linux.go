@@ -10,7 +10,7 @@ import (
 func main() {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
 
-	logfile, err := openLogFile()
+	logfile, err := openLogFile(pocketbook.Share(logFileName))
 	if err != nil {
 		panic(err)
 	}
