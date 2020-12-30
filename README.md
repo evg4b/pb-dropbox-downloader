@@ -3,7 +3,7 @@
     <img width="80%" src="./.github/assets/feature-image.png">
 </p>
 <p align="center">
-    DropBox client for pocket book reader written on Go.
+    DropBox client for PocketBook reader written on Go.
 </p>
 <p align="center">
     <a href="https://github.com/evg4b/pb-dropbox-downloader/actions?query=workflow%3AGo+branch%3Amaster">
