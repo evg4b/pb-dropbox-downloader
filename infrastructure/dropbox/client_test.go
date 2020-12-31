@@ -19,8 +19,9 @@ func TestClient_GetFiles(t *testing.T) {
 		HasMore: true,
 		Cursor:  "",
 		Entries: []*dropboxLib.Metadata{
-			{PathLower: "book1.epub", ContentHash: "00001"},
-			{PathLower: "book2.epub", ContentHash: "00002"},
+			{PathLower: "book1.epub", ContentHash: "00001", Tag: "file"},
+			{PathLower: "book2.epub", ContentHash: "00002", Tag: "file"},
+			{PathLower: "data", ContentHash: "", Tag: "folder"},
 		},
 	}
 	filesMock := mocks.NewDropboxFilesMock(t).
