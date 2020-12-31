@@ -32,10 +32,12 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 
 	mappedFiles := []infrastructure.RemoteFile{}
 	for _, entry := range out.Entries {
-		mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
-			Path: entry.PathLower,
-			Hash: entry.ContentHash,
-		})
+		if entry.Tag == "file" {
+			mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
+				Path: entry.PathLower,
+				Hash: entry.ContentHash,
+			})
+		}
 	}
 
 	return mappedFiles, nil
