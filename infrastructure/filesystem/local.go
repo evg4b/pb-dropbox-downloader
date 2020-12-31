@@ -81,7 +81,7 @@ func mkdirIfNotExistDir(filename string) {
 	dir := path.Dir(filename)
 	if len(dir) > 0 {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			os.Mkdir(dir, perm)
+			os.MkdirAll(dir, perm)
 		}
 	}
 }
