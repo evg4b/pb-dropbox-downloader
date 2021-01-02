@@ -37,6 +37,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 			mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
 				Path: filepath.FromSlash(entry.PathLower[1:]),
 				Hash: entry.ContentHash,
+				Size: entry.Size,
 			})
 		}
 	}

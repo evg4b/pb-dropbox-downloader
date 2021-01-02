@@ -22,6 +22,7 @@ type FileSystem interface {
 type RemoteFile struct {
 	Path string
 	Hash string
+	Size uint64
 }
 
 // Dropbox is intereface to dropbox client wrapper

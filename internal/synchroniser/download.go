@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
 	"sync"
+
+	"github.com/c2h5oh/datasize"
 )
 
 type dataChannel = chan infrastructure.RemoteFile
@@ -47,7 +49,7 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 	for file := range source {
 		fileReader, err := db.dropbox.DownloadFile(file.Path)
 		if err != nil {
-			db.printf("%s .... [filed]", file.Path)
+			db.printf("%s .... [filed]", filepath.Base(file.Path))
 			log.Println(err)
 
 			continue
@@ -57,13 +59,13 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 
 		err = db.files.CopyDataToFile(filepath.Join(folder, file.Path), fileReader)
 		if err != nil {
-			db.printf("%s .... [filed]", file.Path)
+			db.printf("%s .... [filed]", filepath.Base(file.Path))
 			log.Println(err)
 
 			continue
 		}
 
-		db.printf("%s .... [ok]", file.Path)
+		db.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
 		db.storage.Add(file.Path, file.Hash)
 	}
 }
