@@ -4,7 +4,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -34,7 +33,7 @@ func (*Local) GetFilesInFolder(folder string) []string {
 			return err
 		}
 
-		files = append(files, relativePath)
+		files = append(files, filepath.FromSlash(relativePath))
 
 		return nil
 	})
@@ -78,7 +77,7 @@ func (*Local) WriteFile(filename string, data []byte) error {
 }
 
 func mkdirIfNotExistDir(filename string) {
-	dir := path.Dir(filename)
+	dir := filepath.Dir(filename)
 	if len(dir) > 0 {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			os.MkdirAll(dir, perm)

@@ -2,7 +2,7 @@ package synchroniser_test
 
 import (
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	infs "pb-dropbox-downloader/infrastructure"
 	sync "pb-dropbox-downloader/internal/synchroniser"
 	"strings"
@@ -38,13 +38,16 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		value, ok := fakeStorage[key]
 		return value, ok
 	}
+	fakeAdd := func(key, value string) {
+		fakeStorage[key] = value
+	}
 	storageMock := mocks.NewDataStorageMock(t).
 		GetMock.Set(fakeGet).
 		ToMapMock.Return(fakeStorage, nil).
 		FromMapMock.Set(fakeFromMock).
 		KeyExistsMock.Set(fakeExistMock).
 		CommitMock.Return(nil).
-		AddMock.Return().
+		AddMock.Set(fakeAdd).
 		RemoveMock.Return()
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
@@ -56,10 +59,11 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(path.Join(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(path.Join(folder, book5.Path), dataReader2).Then(nil).
-		DeleteFileMock.When(path.Join(folder, book1.Path)).Then(nil).
-		DeleteFileMock.When(path.Join(folder, book2.Path)).Then(nil)
+		CopyDataToFileMock.When(filepath.Join(folder, book3.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(filepath.Join(folder, book5.Path), dataReader2).Then(nil).
+		DeleteFileMock.When(filepath.Join(folder, book1.Path)).Then(nil).
+		DeleteFileMock.When(filepath.Join(folder, book2.Path)).Then(nil).
+		DeleteFileMock.Expect(filepath.Join(folder, book4.Path)).Return(nil)
 
 	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 
@@ -105,8 +109,8 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(path.Join(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(path.Join(folder, book5.Path), dataReader2).Then(nil)
+		CopyDataToFileMock.When(filepath.Join(folder, book3.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(filepath.Join(folder, book5.Path), dataReader2).Then(nil)
 
 	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 

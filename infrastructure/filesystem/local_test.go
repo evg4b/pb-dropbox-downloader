@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure/filesystem"
 	"strings"
@@ -71,7 +70,7 @@ func TestLocal_DeleteFile(t *testing.T) {
 
 func TestLocal_DeleteFile_NotExist(t *testing.T) {
 	fs := filesystem.Local{}
-	err := fs.DeleteFile(path.Join(os.TempDir(), "not-exist-file"))
+	err := fs.DeleteFile(filepath.Join(os.TempDir(), "not-exist-file"))
 
 	assert.True(t, os.IsNotExist(err))
 }

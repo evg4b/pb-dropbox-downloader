@@ -1,6 +1,7 @@
 package synchroniser
 
 import (
+	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/utils"
 	"strings"
@@ -8,7 +9,8 @@ import (
 
 // Sync synchronies folder with application folder in drop box
 func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
-	files := db.files.GetFilesInFolder(folder)
+	normalizedFolder := filepath.FromSlash(folder)
+	files := db.files.GetFilesInFolder(normalizedFolder)
 	err := db.refreshStorage(files)
 	if err != nil {
 		return err
@@ -30,7 +32,7 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 		filesToDownload = append(filesToDownload, remoteFile)
 	}
 
-	err = db.download(folder, filesToDownload)
+	err = db.download(normalizedFolder, filesToDownload)
 	if err != nil {
 		return err
 	}
@@ -41,8 +43,10 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	}
 
 	if remove {
-		filesToDelete := utils.FilterSliceBy(files, db.storage.KeyExists)
-		err = db.delete(folder, filesToDelete)
+		filesToDelete := utils.FilterSliceBy(files, func(key string) bool {
+			return !db.storage.KeyExists(key)
+		})
+		err = db.delete(normalizedFolder, filesToDelete)
 		if err != nil {
 			return err
 		}

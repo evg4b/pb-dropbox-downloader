@@ -2,7 +2,7 @@ package synchroniser
 
 import (
 	"log"
-	"path"
+	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
 	"sync"
 )
@@ -55,7 +55,7 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 
 		defer fileReader.Close()
 
-		err = db.files.CopyDataToFile(path.Join(folder, file.Path), fileReader)
+		err = db.files.CopyDataToFile(filepath.Join(folder, file.Path), fileReader)
 		if err != nil {
 			db.printf("%s .... [filed]", file.Path)
 			log.Println(err)

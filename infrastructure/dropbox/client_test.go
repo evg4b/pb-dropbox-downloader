@@ -3,6 +3,7 @@ package dropbox_test
 import (
 	"errors"
 	"io/ioutil"
+	"path"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/infrastructure/dropbox"
 	"pb-dropbox-downloader/mocks"
@@ -19,9 +20,9 @@ func TestClient_GetFiles(t *testing.T) {
 		HasMore: true,
 		Cursor:  "",
 		Entries: []*dropboxLib.Metadata{
-			{PathLower: "book1.epub", ContentHash: "00001", Tag: "file"},
-			{PathLower: "book2.epub", ContentHash: "00002", Tag: "file"},
-			{PathLower: "data", ContentHash: "", Tag: "folder"},
+			{PathLower: "/book1.epub", ContentHash: "00001", Tag: "file"},
+			{PathLower: "/book2.epub", ContentHash: "00002", Tag: "file"},
+			{PathLower: "/data", ContentHash: "", Tag: "folder"},
 		},
 	}
 	filesMock := mocks.NewDropboxFilesMock(t).
@@ -52,7 +53,7 @@ func TestClient_GetFiles_Error(t *testing.T) {
 
 func TestClient_DownloadFile(t *testing.T) {
 	file := "book1.epub"
-	input := dropboxLib.DownloadInput{Path: file}
+	input := dropboxLib.DownloadInput{Path: path.Join("/", file)}
 	expectedReader := ioutil.NopCloser(strings.NewReader(""))
 	output := dropboxLib.DownloadOutput{
 		Body:   expectedReader,
@@ -70,7 +71,7 @@ func TestClient_DownloadFile(t *testing.T) {
 
 func TestClient_DownloadFile_Error(t *testing.T) {
 	file := "book1.epub"
-	input := dropboxLib.DownloadInput{Path: file}
+	input := dropboxLib.DownloadInput{Path: path.Join("/", file)}
 	expectedError := errors.New("test error")
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(nil, expectedError)
