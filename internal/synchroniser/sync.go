@@ -9,7 +9,7 @@ import (
 
 // Sync synchronies folder with application folder in drop box
 func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
-	normalizedFolder := filepath.FromSlash(folder)
+	normalizedFolder := filepath.ToSlash(folder)
 	files := db.files.GetFilesInFolder(normalizedFolder)
 	err := db.refreshStorage(files)
 	if err != nil {

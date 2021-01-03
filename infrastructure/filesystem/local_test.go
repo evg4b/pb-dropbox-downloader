@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"pb-dropbox-downloader/infrastructure/filesystem"
+	"pb-dropbox-downloader/utils"
 	"strings"
 	"testing"
 
@@ -19,8 +19,8 @@ func TestLocal_GetFilesInFolder(t *testing.T) {
 	assert.EqualValues(t, []string{
 		"book1.epub",
 		"book2.epub",
-		filepath.Join("test", "book3.epub"),
-		filepath.Join("test", "book4.epub"),
+		"test/book3.epub",
+		"test/book4.epub",
 	}, files)
 }
 
@@ -70,7 +70,7 @@ func TestLocal_DeleteFile(t *testing.T) {
 
 func TestLocal_DeleteFile_NotExist(t *testing.T) {
 	fs := filesystem.Local{}
-	err := fs.DeleteFile(filepath.Join(os.TempDir(), "not-exist-file"))
+	err := fs.DeleteFile(utils.JoinPath(os.TempDir(), "not-exist-file"))
 
 	assert.True(t, os.IsNotExist(err))
 }

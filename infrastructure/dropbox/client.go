@@ -4,6 +4,7 @@ import (
 	"io"
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
+	"pb-dropbox-downloader/utils"
 
 	"github.com/tj/go-dropbox"
 )
@@ -35,7 +36,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 	for _, entry := range out.Entries {
 		if entry.Tag == "file" {
 			mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
-				Path: filepath.FromSlash(entry.PathLower[1:]),
+				Path: filepath.ToSlash(entry.PathLower[1:]),
 				Hash: entry.ContentHash,
 				Size: entry.Size,
 			})
@@ -48,7 +49,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 // DownloadFile downloaded file by path
 func (client *Client) DownloadFile(path string) (io.ReadCloser, error) {
 	out, err := client.files.Download(&dropbox.DownloadInput{
-		Path: filepath.ToSlash(filepath.Join(rootDir, path)),
+		Path: utils.JoinPath(rootDir, path),
 	})
 
 	if err != nil {

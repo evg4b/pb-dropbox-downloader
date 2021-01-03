@@ -33,7 +33,7 @@ func (*Local) GetFilesInFolder(folder string) []string {
 			return err
 		}
 
-		files = append(files, filepath.FromSlash(relativePath))
+		files = append(files, filepath.ToSlash(relativePath))
 
 		return nil
 	})

@@ -1,7 +1,6 @@
 package pocketbook_test
 
 import (
-	"path/filepath"
 	"pb-dropbox-downloader/infrastructure/pocketbook"
 	"testing"
 
@@ -17,22 +16,22 @@ func TestConfigPath(t *testing.T) {
 		{
 			name:         "resolve file",
 			pathPartials: []string{"config.json"},
-			expected:     filepath.FromSlash("/mnt/ext1/system/config/config.json"),
+			expected:     "/mnt/ext1/system/config/config.json",
 		},
 		{
 			name:         "resolve folder with array",
 			pathPartials: []string{"demo", "config.json"},
-			expected:     filepath.FromSlash("/mnt/ext1/system/config/demo/config.json"),
+			expected:     "/mnt/ext1/system/config/demo/config.json",
 		},
 		{
 			name:         "resolve folder and file from string",
 			pathPartials: []string{"demo/config.json"},
-			expected:     filepath.FromSlash("/mnt/ext1/system/config/demo/config.json"),
+			expected:     "/mnt/ext1/system/config/demo/config.json",
 		},
 		{
 			name:         "resolve folder and file from string with backslash",
 			pathPartials: []string{"demo\\config.json"},
-			expected:     filepath.FromSlash("/mnt/ext1/system/config/demo/config.json"),
+			expected:     "/mnt/ext1/system/config/demo/config.json",
 		},
 	}
 	for _, tt := range tests {

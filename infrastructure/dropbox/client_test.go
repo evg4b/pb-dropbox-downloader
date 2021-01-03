@@ -3,10 +3,10 @@ package dropbox_test
 import (
 	"errors"
 	"io/ioutil"
-	"path"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/infrastructure/dropbox"
 	"pb-dropbox-downloader/mocks"
+	"pb-dropbox-downloader/utils"
 	"strings"
 	"testing"
 
@@ -53,7 +53,7 @@ func TestClient_GetFiles_Error(t *testing.T) {
 
 func TestClient_DownloadFile(t *testing.T) {
 	file := "book1.epub"
-	input := dropboxLib.DownloadInput{Path: path.Join("/", file)}
+	input := dropboxLib.DownloadInput{Path: utils.JoinPath("/", file)}
 	expectedReader := ioutil.NopCloser(strings.NewReader(""))
 	output := dropboxLib.DownloadOutput{
 		Body:   expectedReader,
@@ -71,7 +71,7 @@ func TestClient_DownloadFile(t *testing.T) {
 
 func TestClient_DownloadFile_Error(t *testing.T) {
 	file := "book1.epub"
-	input := dropboxLib.DownloadInput{Path: path.Join("/", file)}
+	input := dropboxLib.DownloadInput{Path: utils.JoinPath("/", file)}
 	expectedError := errors.New("test error")
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(nil, expectedError)

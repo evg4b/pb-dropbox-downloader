@@ -32,7 +32,7 @@
 
 ## How to build
 
-**Requirements**: [task v3](https://taskfile.dev/), [golang](https://golang.org/)
+**Requirements**: [task v3](https://taskfile.dev/), [golang](https://golang.org/), [docker](https://www.docker.com/)
 
 Use task for run, build and test application:
 
@@ -41,7 +41,9 @@ task # to run application
 
 task build # to build .app file for reader
 
-task test # to run all tests
+task test # to run all tests in docker container
+
+task test_local # to run all tests on local machine
 ```
 
 ### Custom build

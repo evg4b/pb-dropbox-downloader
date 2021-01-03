@@ -2,9 +2,9 @@ package synchroniser_test
 
 import (
 	"io/ioutil"
-	"path/filepath"
 	infs "pb-dropbox-downloader/infrastructure"
 	sync "pb-dropbox-downloader/internal/synchroniser"
+	"pb-dropbox-downloader/utils"
 	"strings"
 	"testing"
 
@@ -59,11 +59,11 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(filepath.Join(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(filepath.Join(folder, book5.Path), dataReader2).Then(nil).
-		DeleteFileMock.When(filepath.Join(folder, book1.Path)).Then(nil).
-		DeleteFileMock.When(filepath.Join(folder, book2.Path)).Then(nil).
-		DeleteFileMock.Expect(filepath.Join(folder, book4.Path)).Return(nil)
+		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader2).Then(nil).
+		DeleteFileMock.When(utils.JoinPath(folder, book1.Path)).Then(nil).
+		DeleteFileMock.When(utils.JoinPath(folder, book2.Path)).Then(nil).
+		DeleteFileMock.Expect(utils.JoinPath(folder, book4.Path)).Return(nil)
 
 	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 
@@ -109,8 +109,8 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(filepath.Join(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(filepath.Join(folder, book5.Path), dataReader2).Then(nil)
+		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader2).Then(nil)
 
 	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
 

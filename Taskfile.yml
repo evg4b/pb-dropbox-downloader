@@ -11,4 +11,6 @@ tasks:
     cmds:
       - go build -ldflags="-s -w" -o pb-dropbox-downloader.app .
 
-  test: go test ./...
+  test_local: go test ./...
+
+  test: docker run --rm -it -v ${PWD}:/app golang bash -c 'cd /app; go test ./...'
