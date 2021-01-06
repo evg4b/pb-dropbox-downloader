@@ -41,3 +41,143 @@ func TestConfigPath(t *testing.T) {
 		})
 	}
 }
+
+func TestApplication(t *testing.T) {
+	tests := []struct {
+		name         string
+		pathPartials []string
+		expected     string
+	}{
+		{
+			name:         "resolve file",
+			pathPartials: []string{"pb.app"},
+			expected:     "/mnt/ext1/application/pb.app",
+		},
+		{
+			name:         "resolve folder with array",
+			pathPartials: []string{"demo", "pb.app"},
+			expected:     "/mnt/ext1/application/demo/pb.app",
+		},
+		{
+			name:         "resolve folder and file from string",
+			pathPartials: []string{"demo/pb.app"},
+			expected:     "/mnt/ext1/application/demo/pb.app",
+		},
+		{
+			name:         "resolve folder and file from string with backslash",
+			pathPartials: []string{"demo\\pb.app"},
+			expected:     "/mnt/ext1/application/demo/pb.app",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := pocketbook.Application(tt.pathPartials...)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestShare(t *testing.T) {
+	tests := []struct {
+		name         string
+		pathPartials []string
+		expected     string
+	}{
+		{
+			name:         "resolve file",
+			pathPartials: []string{"data.bin"},
+			expected:     "/mnt/ext1/system/share/data.bin",
+		},
+		{
+			name:         "resolve folder with array",
+			pathPartials: []string{"demo", "data.bin"},
+			expected:     "/mnt/ext1/system/share/demo/data.bin",
+		},
+		{
+			name:         "resolve folder and file from string",
+			pathPartials: []string{"demo/data.bin"},
+			expected:     "/mnt/ext1/system/share/demo/data.bin",
+		},
+		{
+			name:         "resolve folder and file from string with backslash",
+			pathPartials: []string{"demo\\data.bin"},
+			expected:     "/mnt/ext1/system/share/demo/data.bin",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := pocketbook.Share(tt.pathPartials...)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestSdCard(t *testing.T) {
+	tests := []struct {
+		name         string
+		pathPartials []string
+		expected     string
+	}{
+		{
+			name:         "resolve file",
+			pathPartials: []string{"book.epub"},
+			expected:     "/mnt/ext2/book.epub",
+		},
+		{
+			name:         "resolve folder with array",
+			pathPartials: []string{"demo", "book.epub"},
+			expected:     "/mnt/ext2/demo/book.epub",
+		},
+		{
+			name:         "resolve folder and file from string",
+			pathPartials: []string{"demo/book.epub"},
+			expected:     "/mnt/ext2/demo/book.epub",
+		},
+		{
+			name:         "resolve folder and file from string with backslash",
+			pathPartials: []string{"demo\\book.epub"},
+			expected:     "/mnt/ext2/demo/book.epub",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := pocketbook.SdCard(tt.pathPartials...)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestInternal(t *testing.T) {
+	tests := []struct {
+		name         string
+		pathPartials []string
+		expected     string
+	}{
+		{
+			name:         "resolve file",
+			pathPartials: []string{"book.epub"},
+			expected:     "/mnt/ext1/book.epub",
+		},
+		{
+			name:         "resolve folder with array",
+			pathPartials: []string{"demo", "book.epub"},
+			expected:     "/mnt/ext1/demo/book.epub",
+		},
+		{
+			name:         "resolve folder and file from string",
+			pathPartials: []string{"demo/book.epub"},
+			expected:     "/mnt/ext1/demo/book.epub",
+		},
+		{
+			name:         "resolve folder and file from string with backslash",
+			pathPartials: []string{"demo\\book.epub"},
+			expected:     "/mnt/ext1/demo/book.epub",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := pocketbook.Internal(tt.pathPartials...)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
