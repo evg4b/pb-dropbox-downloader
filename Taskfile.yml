@@ -13,4 +13,4 @@ tasks:
 
   test_local: go test ./...
 
-  test: docker run --rm -it -v ${PWD}:/app golang bash -c 'cd /app; go test ./...'
+  test: docker run --rm -it -v ${PWD}:/app golang bash -c 'cd /app; go test -race -v ./...'

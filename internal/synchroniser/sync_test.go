@@ -2,7 +2,10 @@ package synchroniser_test
 
 import (
 	"io/ioutil"
+	"path/filepath"
 	infs "pb-dropbox-downloader/infrastructure"
+	"pb-dropbox-downloader/infrastructure/filesystem"
+	"pb-dropbox-downloader/internal/datastorage"
 	sync "pb-dropbox-downloader/internal/synchroniser"
 	"pb-dropbox-downloader/utils"
 	"strings"
@@ -21,51 +24,28 @@ var book5 = infs.RemoteFile{Path: "book5.epub", Hash: "00005"}
 
 func TestDropboxSynchroniser_Sync(t *testing.T) {
 	folder := "/mnt/ext1/dropbox"
-	fakeStorage := map[string]string{
-		book1.Path: book1.Hash,
-		book2.Path: book2.Hash,
-		book5.Path: "other key",
-	}
-	fakeFromMock := func(data map[string]string) error {
-		fakeStorage = data
-		return nil
-	}
-	fakeExistMock := func(key string) bool {
-		_, ok := fakeStorage[key]
-		return ok
-	}
-	fakeGet := func(key string) (string, bool) {
-		value, ok := fakeStorage[key]
-		return value, ok
-	}
-	fakeAdd := func(key, value string) {
-		fakeStorage[key] = value
-	}
-	storageMock := mocks.NewDataStorageMock(t).
-		GetMock.Set(fakeGet).
-		ToMapMock.Return(fakeStorage, nil).
-		FromMapMock.Set(fakeFromMock).
-		KeyExistsMock.Set(fakeExistMock).
-		CommitMock.Return(nil).
-		AddMock.Set(fakeAdd).
-		RemoveMock.Return()
 
-	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
-	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
+	storage := datastorage.NewFileStorage(filesystem.NewFileSystem(), filepath.Join(t.TempDir(), "test.bin"))
+
+	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
+	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
+	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 	dropboxMocks := mocks.NewDropboxMock(t).
 		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
-		DownloadFileMock.When(book3.Path).Then(dataReader1, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader2, nil)
+		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
+		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
+		DownloadFileMock.When(book5.Path).Then(dataReader5, nil)
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader2).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book1.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader3).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader5).Then(nil).
 		DeleteFileMock.When(utils.JoinPath(folder, book1.Path)).Then(nil).
 		DeleteFileMock.When(utils.JoinPath(folder, book2.Path)).Then(nil).
 		DeleteFileMock.Expect(utils.JoinPath(folder, book4.Path)).Return(nil)
 
-	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
+	synchroniser := sync.NewSynchroniser(storage, filesMock, dropboxMocks, ioutil.Discard, 3)
 
 	err := synchroniser.Sync(folder, true)
 
@@ -74,45 +54,25 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 
 func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 	folder := "/mnt/ext1/dropbox"
-	fakeStorage := map[string]string{
-		book1.Path: book1.Hash,
-		book2.Path: book2.Hash,
-		book5.Path: "other key",
-	}
-	fakeFromMock := func(data map[string]string) error {
-		fakeStorage = data
-		return nil
-	}
-	fakeExistMock := func(key string) bool {
-		_, ok := fakeStorage[key]
-		return ok
-	}
-	fakeGet := func(key string) (string, bool) {
-		value, ok := fakeStorage[key]
-		return value, ok
-	}
-	storageMock := mocks.NewDataStorageMock(t).
-		GetMock.Set(fakeGet).
-		ToMapMock.Return(fakeStorage, nil).
-		FromMapMock.Set(fakeFromMock).
-		KeyExistsMock.Set(fakeExistMock).
-		CommitMock.Return(nil).
-		AddMock.Return().
-		RemoveMock.Return()
 
-	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #3"))
-	dataReader2 := ioutil.NopCloser(strings.NewReader("This is book #5"))
+	storage := datastorage.NewFileStorage(filesystem.NewFileSystem(), filepath.Join(t.TempDir(), "test.bin"))
+
+	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
+	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
+	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 	dropboxMocks := mocks.NewDropboxMock(t).
 		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
-		DownloadFileMock.When(book3.Path).Then(dataReader1, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader2, nil)
+		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
+		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
+		DownloadFileMock.When(book5.Path).Then(dataReader5, nil)
 
 	filesMock := mocks.NewFileSystemMock(t).
 		GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader1).Then(nil).
-		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader2).Then(nil)
+		CopyDataToFileMock.When(utils.JoinPath(folder, book1.Path), dataReader1).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader3).Then(nil).
+		CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader5).Then(nil)
 
-	synchroniser := sync.NewSynchroniser(storageMock, filesMock, dropboxMocks, ioutil.Discard, 3)
+	synchroniser := sync.NewSynchroniser(storage, filesMock, dropboxMocks, ioutil.Discard, 3)
 
 	err := synchroniser.Sync(folder, false)
 
