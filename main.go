@@ -16,11 +16,13 @@ import (
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
-const fatalExitCode = 500
-const parallelism = 3
-const logFileName = "pb-dropbox-downloader.log"
-const databaseFileName = "pb-dropbox-downloader.bin"
-const configFileName = "pb-dropbox-downloader-config.json"
+const (
+	fatalExitCode    = 500
+	parallelism      = 3
+	logFileName      = "pb-dropbox-downloader.log"
+	databaseFileName = "pb-dropbox-downloader.bin"
+	configFileName   = "pb-dropbox-downloader-config.json"
+)
 
 type pbSyncConfig struct {
 	AccessToken      string `json:"access_token"`
@@ -32,7 +34,8 @@ type pbSyncConfig struct {
 func main() {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
 
-	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, 0755)
+	const logfilePerm = 0755
+	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +81,7 @@ func loadConfig(configPath string) (pbSyncConfig, error) {
 	}
 
 	config := pbSyncConfig{}
-	json.Unmarshal(configData, &config)
+	err = json.Unmarshal(configData, &config)
 
-	return config, nil
+	return config, err
 }

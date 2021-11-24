@@ -32,12 +32,14 @@
 
 ## How to build
 
-**Requirements**: [task v3](https://taskfile.dev/), [golang](https://golang.org/), [docker](https://www.docker.com/)
+**Requirements**: [task v3](https://taskfile.dev/), [golang](https://golang.org/), [docker](https://www.docker.com/). [golang-ci-lint](https://golangci-lint.run/)
 
 Use task for run, build and test application:
 
 ``` bash
 task # to run application
+
+task lint # to lint code
 
 task build # to build .app file for reader
 

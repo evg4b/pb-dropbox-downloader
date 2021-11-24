@@ -7,7 +7,7 @@ import (
 	"pb-dropbox-downloader/internal"
 )
 
-// DropboxSynchroniser Dropbox data synchroniser app structure
+// DropboxSynchroniser Dropbox data synchroniser app structure.
 type DropboxSynchroniser struct {
 	storage        internal.DataStorage
 	files          infrastructure.FileSystem
@@ -16,7 +16,7 @@ type DropboxSynchroniser struct {
 	output         io.Writer
 }
 
-// NewSynchroniser creates and initialize new instance of DropboxSynchroniser create
+// NewSynchroniser creates and initialize new instance of DropboxSynchroniser create.
 func NewSynchroniser(
 	storage internal.DataStorage,
 	files infrastructure.FileSystem,

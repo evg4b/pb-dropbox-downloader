@@ -38,27 +38,17 @@ func (db *DropboxSynchroniser) startThreads(folder string, source dataChannel) *
 	wg := sync.WaitGroup{}
 	wg.Add(db.maxParallelism)
 	for i := 0; i < db.maxParallelism; i++ {
-		go db.downloadThread(&wg, folder, source, i)
+		go db.downloadThread(&wg, folder, source)
 	}
 
 	return &wg
 }
 
-func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string, source dataChannel, id int) {
+func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string, source dataChannel) {
 	defer wg.Done()
 
 	for file := range source {
-		fileReader, err := db.dropbox.DownloadFile(file.Path)
-		if err != nil {
-			db.printf("%s .... [filed]", filepath.Base(file.Path))
-			log.Println(err)
-
-			continue
-		}
-
-		defer fileReader.Close()
-
-		err = db.files.CopyDataToFile(utils.JoinPath(folder, file.Path), fileReader)
+		err := db.downloadFile(file, folder)
 		if err != nil {
 			db.printf("%s .... [filed]", filepath.Base(file.Path))
 			log.Println(err)
@@ -69,4 +59,15 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 		db.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
 		db.storage.Add(file.Path, file.Hash)
 	}
+}
+
+func (db *DropboxSynchroniser) downloadFile(file infrastructure.RemoteFile, folder string) error {
+	fileReader, err := db.dropbox.DownloadFile(file.Path)
+	if err != nil {
+		return err
+	}
+
+	defer fileReader.Close()
+
+	return db.files.CopyDataToFile(utils.JoinPath(folder, file.Path), fileReader)
 }

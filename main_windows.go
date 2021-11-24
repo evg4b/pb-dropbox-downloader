@@ -5,11 +5,14 @@ import (
 	"pb-dropbox-downloader/infrastructure/pocketbook"
 )
 
+// nolint: gochecknoinits
 func init() {
 	pocketbook.IntrenalStoragePath = "./testdata/internal"
 	pocketbook.SdCardStoragePath = "./testdata/sdcard"
 
-	os.MkdirAll(pocketbook.ConfigPath("/"), 0775)
-	os.MkdirAll(pocketbook.Share("/"), 0775)
-	os.MkdirAll(pocketbook.SdCard("/"), 0775)
+	const perm = 0775
+
+	_ = os.MkdirAll(pocketbook.ConfigPath("/"), perm)
+	_ = os.MkdirAll(pocketbook.Share("/"), perm)
+	_ = os.MkdirAll(pocketbook.SdCard("/"), perm)
 }

@@ -1,0 +1,76 @@
+run:
+  skip-dirs:
+    - testing
+  allow-parallel-runners: true
+  timeout: 5m
+linters:
+  enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - gosec
+    - unconvert
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - nlreturn
+    - nestif
+    - gomnd
+    - unused
+    - varcheck
+    - stylecheck
+    - gocyclo
+    - dupl
+    - misspell
+    - unparam
+    - whitespace
+    - goconst
+    - lll
+    - gocritic
+    - vet
+    - asciicheck
+    - cyclop
+    - durationcheck
+    - errname
+    - errorlint
+    - exportloopref
+    - exhaustive
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - godot
+    - gomnd
+    - gomoddirectives
+    - gosec
+    - ifshort
+    - importas
+    - makezero
+    - misspell
+    - nakedret
+    - nilerr
+    - nlreturn
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - stylecheck
+    - tagliatelle
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    - whitespace
+    # - wrapcheck
+
+linters-settings:
+  lll:
+    line-length: 140
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+

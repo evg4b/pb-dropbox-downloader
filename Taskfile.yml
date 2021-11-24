@@ -10,6 +10,8 @@ tasks:
       GOARM: 5
     cmds:
       - go build -ldflags="-s -w" -o pb-dropbox-downloader.app .
+  
+  lint: golangci-lint run ./...
 
   test_local: go test ./...
 

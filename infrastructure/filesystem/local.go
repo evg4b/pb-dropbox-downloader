@@ -9,14 +9,13 @@ import (
 
 const perm = 0755
 
-type Local struct {
-}
+type Local struct{}
 
 func NewFileSystem() *Local {
 	return &Local{}
 }
 
-// GetFilesInFolder return relative file paths in folder (include subfolder to)
+// GetFilesInFolder return relative file paths in folder (include subfolder to).
 func (*Local) GetFilesInFolder(folder string) []string {
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
 		return []string{}
@@ -28,16 +27,15 @@ func (*Local) GetFilesInFolder(folder string) []string {
 			return nil
 		}
 
-		relativePath, err := filepath.Rel(folder, path)
-		if err != nil {
-			return err
+		relativePath, relError := filepath.Rel(folder, path)
+		if relError != nil {
+			return relError
 		}
 
 		files = append(files, filepath.ToSlash(relativePath))
 
 		return nil
 	})
-
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +43,7 @@ func (*Local) GetFilesInFolder(folder string) []string {
 	return files
 }
 
-// CopyDataToFile copy data from reader to file
+// CopyDataToFile copy data from reader to file.
 func (*Local) CopyDataToFile(filename string, source io.Reader) error {
 	mkdirIfNotExistDir(filename)
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, perm)
@@ -60,19 +58,20 @@ func (*Local) CopyDataToFile(filename string, source io.Reader) error {
 	return err
 }
 
-// DeleteFile delete file from target filesystem
+// DeleteFile delete file from target filesystem.
 func (*Local) DeleteFile(file string) error {
 	return os.Remove(file)
 }
 
-// ReadFile read file content from target filesystem
+// ReadFile read file content from target filesystem.
 func (*Local) ReadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
-// WriteFile writes content to file in target filesystem
+// WriteFile writes content to file in target filesystem.
 func (*Local) WriteFile(filename string, data []byte) error {
 	mkdirIfNotExistDir(filename)
+
 	return ioutil.WriteFile(filename, data, perm)
 }
 
@@ -80,7 +79,7 @@ func mkdirIfNotExistDir(filename string) {
 	dir := filepath.Dir(filename)
 	if len(dir) > 0 {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			os.MkdirAll(dir, perm)
+			_ = os.MkdirAll(dir, perm) // FIXME: add Error checking
 		}
 	}
 }

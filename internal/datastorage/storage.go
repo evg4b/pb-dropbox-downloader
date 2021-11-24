@@ -27,8 +27,8 @@ func NewFileStorage(files infrastructure.FileSystem, configPath string) *FileSto
 func (storage *FileStorage) Get(key string) (string, bool) {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
-	err := storage.preload()
-	if err != nil {
+
+	if err := storage.preload(); err != nil {
 		return "", false
 	}
 
@@ -40,8 +40,8 @@ func (storage *FileStorage) Get(key string) (string, bool) {
 func (storage *FileStorage) ToMap() (map[string]string, error) {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
-	err := storage.preload()
-	if err != nil {
+
+	if err := storage.preload(); err != nil {
 		return nil, err
 	}
 
@@ -51,15 +51,14 @@ func (storage *FileStorage) ToMap() (map[string]string, error) {
 func (storage *FileStorage) FromMap(data map[string]string) error {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
-	err := storage.preload()
-	if err != nil {
+
+	if err := storage.preload(); err != nil {
 		return err
 	}
 
 	storage.data = data
 
-	err = storage.unload()
-	if err != nil {
+	if err := storage.unload(); err != nil {
 		return err
 	}
 
@@ -69,8 +68,8 @@ func (storage *FileStorage) FromMap(data map[string]string) error {
 func (storage *FileStorage) KeyExists(key string) bool {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
-	err := storage.preload()
-	if err != nil {
+
+	if err := storage.preload(); err != nil {
 		return false
 	}
 
