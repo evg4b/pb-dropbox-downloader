@@ -7,12 +7,12 @@ import (
 	"log"
 	"os"
 	"pb-dropbox-downloader/infrastructure/dropbox"
-	"pb-dropbox-downloader/infrastructure/filesystem"
 	"pb-dropbox-downloader/infrastructure/pocketbook"
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/synchroniser"
 	"pb-dropbox-downloader/utils"
 
+	"github.com/go-git/go-billy/v5/osfs"
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
@@ -58,10 +58,18 @@ func main() {
 	fmt.Println(account.Email)
 
 	dropboxClient := dropbox.NewClient(dropboxLibClient.Files)
-	fileSystem := filesystem.NewFileSystem()
-	storage := datastorage.NewFileStorage(fileSystem, pocketbook.Share(databaseFileName))
 
-	synchroniser := synchroniser.NewSynchroniser(storage, fileSystem, dropboxClient, os.Stdout, parallelism)
+	fs := osfs.New("")
+
+	storage := datastorage.NewFileStorage(fs, pocketbook.Share(databaseFileName))
+
+	synchroniser := synchroniser.NewSynchroniser(
+		synchroniser.WithStorage(storage),
+		synchroniser.WithFileSystem(fs),
+		synchroniser.WithDropboxClient(dropboxClient),
+		synchroniser.WithOutput(os.Stdout),
+		synchroniser.WithMaxParallelism(parallelism),
+	)
 
 	folder := pocketbook.Internal(config.Folder)
 	if config.OnSdCard {
@@ -75,12 +83,14 @@ func main() {
 }
 
 func loadConfig(configPath string) (pbSyncConfig, error) {
+	config := pbSyncConfig{}
 	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return pbSyncConfig{}, err
+		return config, err
 	}
 
-	config := pbSyncConfig{}
+	log.Printf("loaded configuration from '%s'", configPath)
+
 	err = json.Unmarshal(configData, &config)
 
 	return config, err

@@ -1,6 +1,7 @@
 package synchroniser
 
 import (
+	"io/ioutil"
 	"log"
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
@@ -69,5 +70,19 @@ func (db *DropboxSynchroniser) downloadFile(file infrastructure.RemoteFile, fold
 
 	defer fileReader.Close()
 
-	return db.files.CopyDataToFile(utils.JoinPath(folder, file.Path), fileReader)
+	data, err := ioutil.ReadAll(fileReader)
+	if err != nil {
+		return err
+	}
+
+	localFile, err := db.files.Create(utils.JoinPath(folder, file.Path))
+	if err != nil {
+		return err
+	}
+
+	defer localFile.Close()
+
+	_, err = localFile.Write(data)
+
+	return err
 }

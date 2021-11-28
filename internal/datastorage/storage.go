@@ -2,20 +2,21 @@ package datastorage
 
 import (
 	"os"
-	"pb-dropbox-downloader/infrastructure"
 	"sync"
 
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/util"
 	"github.com/kelindar/binary"
 )
 
 type FileStorage struct {
 	data       map[string]string
 	mu         sync.Mutex
-	files      infrastructure.FileSystem
+	files      billy.Filesystem
 	configPath string
 }
 
-func NewFileStorage(files infrastructure.FileSystem, configPath string) *FileStorage {
+func NewFileStorage(files billy.Filesystem, configPath string) *FileStorage {
 	return &FileStorage{
 		data:       nil,
 		files:      files,
@@ -105,14 +106,14 @@ func (storage *FileStorage) unload() error {
 		return err
 	}
 
-	return storage.files.WriteFile(storage.configPath, data)
+	return util.WriteFile(storage.files, storage.configPath, data, os.ModePerm)
 }
 
 func (storage *FileStorage) preload() error {
 	if storage.data == nil {
 		storage.data = make(map[string]string)
 
-		data, err := storage.files.ReadFile(storage.configPath)
+		data, err := util.ReadFile(storage.files, storage.configPath)
 		if os.IsNotExist(err) {
 			return nil
 		}

@@ -5,32 +5,28 @@ import (
 	"io"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/internal"
+
+	"github.com/go-git/go-billy/v5"
 )
 
 // DropboxSynchroniser Dropbox data synchroniser app structure.
 type DropboxSynchroniser struct {
 	storage        internal.DataStorage
-	files          infrastructure.FileSystem
+	files          billy.Filesystem
 	dropbox        infrastructure.Dropbox
 	maxParallelism int
 	output         io.Writer
 }
 
 // NewSynchroniser creates and initialize new instance of DropboxSynchroniser create.
-func NewSynchroniser(
-	storage internal.DataStorage,
-	files infrastructure.FileSystem,
-	dropbox infrastructure.Dropbox,
-	output io.Writer,
-	maxParallelism int,
-) *DropboxSynchroniser {
-	return &DropboxSynchroniser{
-		storage:        storage,
-		files:          files,
-		dropbox:        dropbox,
-		maxParallelism: maxParallelism,
-		output:         output,
+func NewSynchroniser(options ...synchroniserOption) *DropboxSynchroniser {
+	ds := &DropboxSynchroniser{maxParallelism: 1, output: io.Discard}
+
+	for _, option := range options {
+		option(ds)
 	}
+
+	return ds
 }
 
 func (db *DropboxSynchroniser) printf(format string, a ...interface{}) {

@@ -1,6 +1,7 @@
 package synchroniser
 
 import (
+	"os"
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/utils"
@@ -10,8 +11,13 @@ import (
 // Sync synchronies folder with application folder in drop box.
 func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	normalizedFolder := filepath.ToSlash(folder)
-	files := db.files.GetFilesInFolder(normalizedFolder)
-	err := db.refreshStorage(files)
+
+	files, err := db.files.ReadDir(normalizedFolder)
+	if err != nil {
+		return err
+	}
+
+	err = db.refreshStorage(files)
 	if err != nil {
 		return err
 	}
@@ -43,8 +49,8 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	}
 
 	if remove {
-		filesToDelete := utils.FilterSliceBy(files, func(key string) bool {
-			return !db.storage.KeyExists(key)
+		filesToDelete := utils.FilterSliceBy(files, func(file os.FileInfo) bool {
+			return !db.storage.KeyExists(file.Name())
 		})
 		err = db.delete(normalizedFolder, filesToDelete)
 		if err != nil {
@@ -55,14 +61,14 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	return nil
 }
 
-func (db *DropboxSynchroniser) refreshStorage(files []string) error {
+func (db *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
 	storageMap, err := db.storage.ToMap()
 	if err != nil {
 		return err
 	}
 
 	filteredMap := utils.FilterMapBy(storageMap, func(key, _ string) bool {
-		return utils.SliceContins(files, key)
+		return utils.FileSliceContins(files, key)
 	})
 
 	return db.storage.FromMap(filteredMap)

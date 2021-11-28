@@ -8,7 +8,7 @@ import (
 
 func (db *DropboxSynchroniser) delete(folder string, files []string) error {
 	for _, file := range files {
-		err := db.files.DeleteFile(utils.JoinPath(folder, file))
+		err := db.files.Remove(utils.JoinPath(folder, file))
 		if err != nil {
 			fmt.Fprintf(db.output, "%s .... [filed]\n", file)
 			log.Println(err)

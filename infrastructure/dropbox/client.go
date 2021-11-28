@@ -17,8 +17,8 @@ type Client struct {
 }
 
 // NewClient creates new instance of dropbox client wrapper.
-func NewClient(db dropboxFiles) *Client {
-	return &Client{db}
+func NewClient(files dropboxFiles) *Client {
+	return &Client{files}
 }
 
 // GetFiles returns files in application folder (include subfolder to).
@@ -33,7 +33,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 
 	mappedFiles := []infrastructure.RemoteFile{}
 	for _, entry := range out.Entries {
-		if entry.Tag == "file" {
+		if isFile(entry) {
 			mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
 				Path: filepath.ToSlash(entry.PathLower[1:]),
 				Hash: entry.ContentHash,
@@ -50,9 +50,14 @@ func (client *Client) DownloadFile(path string) (io.ReadCloser, error) {
 	out, err := client.files.Download(&dropbox.DownloadInput{
 		Path: utils.JoinPath(rootDir, path),
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
 	return out.Body, nil
+}
+
+func isFile(metadata *dropbox.Metadata) bool {
+	return metadata.Tag == "file"
 }

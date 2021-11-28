@@ -1,13 +1,16 @@
 package utils
 
-import "strings"
+import (
+	"os"
+	"strings"
+)
 
 // FilterSliceBy filters slice of strings by predicate.
-func FilterSliceBy(collection []string, predicate func(string) bool) []string {
+func FilterSliceBy(collection []os.FileInfo, predicate func(os.FileInfo) bool) []string {
 	result := []string{}
 	for _, item := range collection {
 		if predicate(item) {
-			result = append(result, item)
+			result = append(result, item.Name())
 		}
 	}
 
@@ -18,6 +21,17 @@ func FilterSliceBy(collection []string, predicate func(string) bool) []string {
 func SliceContins(collection []string, value string) bool {
 	for _, item := range collection {
 		if strings.EqualFold(item, value) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// FileSliceContins checks if slice contains passed value.
+func FileSliceContins(collection []os.FileInfo, value string) bool {
+	for _, item := range collection {
+		if strings.EqualFold(item.Name(), value) {
 			return true
 		}
 	}
