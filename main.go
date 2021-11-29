@@ -1,6 +1,3 @@
-//go:build !UI
-// +build !UI
-
 package main
 
 import (
