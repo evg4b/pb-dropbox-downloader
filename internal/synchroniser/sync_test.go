@@ -37,7 +37,9 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
 		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader5, nil)
+		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).
+		AccountDisplayNameMock.Return("DisplayName").
+		AccountEmailMock.Return("email@mail.com")
 	testutils.MakeFiles(t, fs, map[string]string{
 		utils.JoinPath(folder, book1.Path): "This is book #1",
 		utils.JoinPath(folder, book3.Path): "This is book #3",
@@ -70,7 +72,9 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader5, nil)
+		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).
+		AccountDisplayNameMock.Return("DisplayName").
+		AccountEmailMock.Return("email@mail.com")
 
 	testutils.MakeFiles(t, fs, map[string]string{
 		utils.JoinPath(folder, book1.Path): "This is book #1",

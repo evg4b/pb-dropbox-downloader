@@ -31,4 +31,8 @@ type Dropbox interface {
 	GetFiles() ([]RemoteFile, error)
 	// DownloadFile downloaded file by path.
 	DownloadFile(string) (io.ReadCloser, error)
+	// AccountDisplayName returns account display name.
+	AccountDisplayName() string
+	// AccountEmail returns account display email.
+	AccountEmail() string
 }

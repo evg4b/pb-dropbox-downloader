@@ -1,6 +1,7 @@
 package synchroniser
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"pb-dropbox-downloader/infrastructure"
@@ -11,6 +12,10 @@ import (
 // nolint: cyclop
 // Sync synchronies folder with application folder in drop box.
 func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
+	fmt.Fprintln(db.output, logo)
+	fmt.Fprintf(db.output, "Account: %s\n", db.dropbox.AccountDisplayName())
+	fmt.Fprintf(db.output, "Email: %s\n", db.dropbox.AccountEmail())
+
 	normalizedFolder := filepath.ToSlash(folder)
 
 	files, err := db.files.ReadDir(normalizedFolder)

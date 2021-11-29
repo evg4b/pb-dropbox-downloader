@@ -28,7 +28,7 @@ func TestClient_GetFiles(t *testing.T) {
 	filesMock := mocks.NewDropboxFilesMock(t).
 		ListFolderMock.Expect(&input).Return(&output, nil)
 
-	client := dropbox.NewClient(filesMock)
+	client := dropbox.NewClient(filesMock, &mocks.Account)
 	files, err := client.GetFiles()
 
 	assert.NoError(t, err)
@@ -44,7 +44,7 @@ func TestClient_GetFiles_Error(t *testing.T) {
 	filesMock := mocks.NewDropboxFilesMock(t).
 		ListFolderMock.Expect(&input).Return(nil, expectedError)
 
-	client := dropbox.NewClient(filesMock)
+	client := dropbox.NewClient(filesMock, &mocks.Account)
 	files, err := client.GetFiles()
 
 	assert.Equal(t, expectedError, err)
@@ -62,7 +62,7 @@ func TestClient_DownloadFile(t *testing.T) {
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(&output, nil)
 
-	client := dropbox.NewClient(filesMock)
+	client := dropbox.NewClient(filesMock, &mocks.Account)
 	reader, err := client.DownloadFile(file)
 
 	assert.NoError(t, err)
@@ -76,7 +76,7 @@ func TestClient_DownloadFile_Error(t *testing.T) {
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(nil, expectedError)
 
-	client := dropbox.NewClient(filesMock)
+	client := dropbox.NewClient(filesMock, &mocks.Account)
 	reader, err := client.DownloadFile(file)
 
 	assert.Equal(t, expectedError, err)

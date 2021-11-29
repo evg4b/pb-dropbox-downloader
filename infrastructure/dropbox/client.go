@@ -6,24 +6,25 @@ import (
 	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/utils"
 
-	"github.com/tj/go-dropbox"
+	dropboxLib "github.com/tj/go-dropbox"
 )
 
 const rootDir = "/"
 
 // Client is main structure to dropbox client wrapper.
 type Client struct {
-	files dropboxFiles
+	files   dropboxFiles
+	account *dropboxLib.GetCurrentAccountOutput
 }
 
 // NewClient creates new instance of dropbox client wrapper.
-func NewClient(files dropboxFiles) *Client {
-	return &Client{files}
+func NewClient(files dropboxFiles, account *dropboxLib.GetCurrentAccountOutput) *Client {
+	return &Client{files, account}
 }
 
 // GetFiles returns files in application folder (include subfolder to).
 func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
-	out, err := client.files.ListFolder(&dropbox.ListFolderInput{
+	out, err := client.files.ListFolder(&dropboxLib.ListFolderInput{
 		Path:      rootDir,
 		Recursive: true,
 	})
@@ -47,7 +48,7 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 
 // DownloadFile downloaded file by path.
 func (client *Client) DownloadFile(path string) (io.ReadCloser, error) {
-	out, err := client.files.Download(&dropbox.DownloadInput{
+	out, err := client.files.Download(&dropboxLib.DownloadInput{
 		Path: utils.JoinPath(rootDir, path),
 	})
 
@@ -58,6 +59,16 @@ func (client *Client) DownloadFile(path string) (io.ReadCloser, error) {
 	return out.Body, nil
 }
 
-func isFile(metadata *dropbox.Metadata) bool {
+// AccountDisplayName returns account display name.
+func (client *Client) AccountDisplayName() string {
+	return client.account.Name.DisplayName
+}
+
+// AccountEmail returns account display email.
+func (client *Client) AccountEmail() string {
+	return client.account.Email
+}
+
+func isFile(metadata *dropboxLib.Metadata) bool {
 	return metadata.Tag == "file"
 }

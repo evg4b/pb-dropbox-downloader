@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -38,13 +37,8 @@ func mainInternal(w io.Writer) {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, account.Name.DisplayName)
-	fmt.Fprintln(w, account.Email)
-
-	dropboxClient := dropbox.NewClient(dropboxLibClient.Files)
-
 	fs := osfs.New("")
-
+	dropboxClient := dropbox.NewClient(dropboxLibClient.Files, account)
 	storage := datastorage.NewFileStorage(fs, pocketbook.Share(databaseFileName))
 
 	synchroniser := synchroniser.NewSynchroniser(
