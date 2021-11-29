@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
+	github.com/dennwc/inkview v0.0.0-20211024095852-a8a15d6268a3
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/gojuno/minimock/v3 v3.0.10
 	github.com/kelindar/binary v1.0.15

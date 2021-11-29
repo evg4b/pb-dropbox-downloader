@@ -1,3 +1,4 @@
+// nolint: dupl
 package synchroniser_test
 
 import (
@@ -18,9 +19,7 @@ import (
 )
 
 var book1 = infs.RemoteFile{Path: "book1.epub", Hash: "00001"}
-var book2 = infs.RemoteFile{Path: "book2.epub", Hash: "00002"}
 var book3 = infs.RemoteFile{Path: "book3.epub", Hash: "00003"}
-var book4 = infs.RemoteFile{Path: "book4.epub", Hash: "00004"}
 var book5 = infs.RemoteFile{Path: "book5.epub", Hash: "00005"}
 
 func TestDropboxSynchroniser_Sync(t *testing.T) {
@@ -73,11 +72,11 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
 		DownloadFileMock.When(book5.Path).Then(dataReader5, nil)
 
-	// filesMock := mocks.NewFileSystemMock(t).
-	// 	GetFilesInFolderMock.Return([]string{book1.Path, book2.Path, book3.Path, book4.Path}).
-	// 	CopyDataToFileMock.When(utils.JoinPath(folder, book1.Path), dataReader1).Then(nil).
-	// 	CopyDataToFileMock.When(utils.JoinPath(folder, book3.Path), dataReader3).Then(nil).
-	// 	CopyDataToFileMock.When(utils.JoinPath(folder, book5.Path), dataReader5).Then(nil)
+	testutils.MakeFiles(t, fs, map[string]string{
+		utils.JoinPath(folder, book1.Path): "This is book #1",
+		utils.JoinPath(folder, book3.Path): "This is book #3",
+		utils.JoinPath(folder, book5.Path): "This is book #5",
+	})
 
 	synchroniser := sync.NewSynchroniser(
 		sync.WithStorage(storage),

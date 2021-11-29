@@ -25,10 +25,11 @@
 
 ## How to install
 
-1. Copy `pb-dropbox-downloader.app` to `/applications` folder on your reader.
-2. Fill configuration from `config.example.json`, and save it as `pb-dropbox-downloader-config.json`.
-3. Copy `pb-dropbox-downloader-config.json` to `/system/config` folder on reader.
-4. Turn on your book reader, go to application > pb-dropbox-downloader
+1. Download and unarchive last version from [Releases page](https://github.com/evg4b/pb-dropbox-downloader/releases).
+2. Copy `pb-dropbox-downloader.app` to `/applications` folder on your reader. (This folder can be hidden. To see it use [this link](https://support.microsoft.com/en-us/windows/view-hidden-files-and-folders-in-windows-97fbc472-c603-9d90-91d0-1166d1d9f4b5#WindowsVersion=Windows_10).)
+3. Fill configuration from `config.example.json` or generate it on [this site](https://pb-dropbox-downloader.netlify.app/), and save it as `pb-dropbox-downloader-config.json`.
+4. Copy `pb-dropbox-downloader-config.json` to `/system/config` folder on reader (The `system` folder can be hidden too).
+5. Turn on your book reader, go to application > pb-dropbox-downloader
 
 ## How to build
 
@@ -37,20 +38,25 @@
 Use task for run, build and test application:
 
 ``` bash
-task # to run application
-
+task # to run application (on local machine)
 task lint # to lint code
-
-task build # to build .app file for reader
-
+task build-cli # to build cli .app file for reader
+task build # to build .app file for reader with UI
 task test # to run all tests in docker container
-
-task test_local # to run all tests on local machine
+task test-local # to run all tests on local machine
 ```
 
 ### Custom build
 
-You can build application with custom [ldflags flags](https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications-ru). 
+You can build application with custom [ldflags flags](https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications-ru).
+
+Available flags :
+- `main.parallelism` - Number of goroutines used for downloading files (default value `3`)
+- `main.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
+- `main.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
+- `main.configFileName` - Name of configuration file (default  value `pb-dropbox-downloader-config.json`)
+
+#### CLI version
 
 powershell:
 ``` powershell
@@ -65,13 +71,13 @@ bash:
 GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="-s -w -X <your custom fdflegs>" -o pb-dropbox-downloader.app .
 ```
 
-Flags :
-- `main.parallelism` - Number of goroutines used for downloading files (default value `3`)
-- `main.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
-- `main.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
-- `main.configFileName` - Name of configuration file (default  value`pb-dropbox-downloader-config.json`)
+#### UI version (docker required)
 
-## Testing: 
+``` bash
+docker run --rm -v ${PWD}:/app 5keeve/pocketbook-go-sdk:6.3.0-b288-v1 build -v -tags=UI -ldflags="-s -w -X <your custom fdflegs>" -o pb-dropbox-downloader.app .
+```
+
+## Testing:
 
 Currently this application testes only on next devices:
 1. Pocketbook 624

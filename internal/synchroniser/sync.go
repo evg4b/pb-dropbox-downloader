@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// nolint: cyclop
 // Sync synchronies folder with application folder in drop box.
 func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	normalizedFolder := filepath.ToSlash(folder)

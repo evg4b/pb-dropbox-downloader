@@ -1,9 +1,11 @@
+//go:build !UI
+// +build !UI
+
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"pb-dropbox-downloader/infrastructure/dropbox"
@@ -16,22 +18,7 @@ import (
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
-const (
-	fatalExitCode    = 500
-	parallelism      = 3
-	logFileName      = "pb-dropbox-downloader.log"
-	databaseFileName = "pb-dropbox-downloader.bin"
-	configFileName   = "pb-dropbox-downloader-config.json"
-)
-
-type pbSyncConfig struct {
-	AccessToken      string `json:"access_token"`
-	Folder           string `json:"folder"`
-	AllowDeleteFiles bool   `json:"allow_delete_files"`
-	OnSdCard         bool   `json:"on_sd_card"`
-}
-
-func main() {
+func mainInternal(w io.Writer) {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
 
 	const logfilePerm = 0755
@@ -54,8 +41,8 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(account.Name.DisplayName)
-	fmt.Println(account.Email)
+	fmt.Fprintln(w, account.Name.DisplayName)
+	fmt.Fprintln(w, account.Email)
 
 	dropboxClient := dropbox.NewClient(dropboxLibClient.Files)
 
@@ -67,7 +54,7 @@ func main() {
 		synchroniser.WithStorage(storage),
 		synchroniser.WithFileSystem(fs),
 		synchroniser.WithDropboxClient(dropboxClient),
-		synchroniser.WithOutput(os.Stdout),
+		synchroniser.WithOutput(w),
 		synchroniser.WithMaxParallelism(parallelism),
 	)
 
@@ -80,18 +67,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func loadConfig(configPath string) (pbSyncConfig, error) {
-	config := pbSyncConfig{}
-	configData, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		return config, err
-	}
-
-	log.Printf("loaded configuration from '%s'", configPath)
-
-	err = json.Unmarshal(configData, &config)
-
-	return config, err
 }

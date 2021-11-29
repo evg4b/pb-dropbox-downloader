@@ -3,16 +3,18 @@ version: '3'
 tasks:
   default: go run .
 
-  build: 
+  build-cli:
     env:
       GOOS: linux
       GOARCH: arm
       GOARM: 5
     cmds:
       - go build -ldflags="-s -w" -o pb-dropbox-downloader.app .
-  
+
+  build: docker run --rm -v ${PWD}:/app 5keeve/pocketbook-go-sdk:6.3.0-b288-v1 build -v -tags=UI -ldflags="-s -w" -o pb-dropbox-downloader.app .
+
   lint: golangci-lint run ./...
 
-  test_local: go test ./...
+  test-local: go test ./...
 
   test: docker run --rm -it -v ${PWD}:/app golang bash -c 'cd /app; go test -race -v ./...'

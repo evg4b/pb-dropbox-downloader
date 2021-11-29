@@ -7,8 +7,8 @@ import (
 
 // nolint: gochecknoinits
 func init() {
-	pocketbook.IntrenalStoragePath = "./testdata/internal"
-	pocketbook.SdCardStoragePath = "./testdata/sdcard"
+	pocketbook.IntrenalStoragePath = "./testing/testdata/internal"
+	pocketbook.SdCardStoragePath = "./testing/testdata/sdcard"
 
 	const perm = 0775
 
