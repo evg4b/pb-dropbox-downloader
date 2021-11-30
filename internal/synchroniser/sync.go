@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/dropbox"
-	"pb-dropbox-downloader/utils"
 	"strings"
 )
 
@@ -55,9 +54,19 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	}
 
 	if remove {
-		filesToDelete := utils.FilterSliceBy(files, func(file os.FileInfo) bool {
-			return !db.storage.KeyExists(file.Name())
-		})
+		filesToDelete := []string{}
+		for _, file := range files {
+			fileName := file.Name()
+			exist, err := db.storage.KeyExists(fileName)
+			if err != nil {
+				return err
+			}
+
+			if !exist {
+				filesToDelete = append(filesToDelete, fileName)
+			}
+		}
+
 		err = db.delete(normalizedFolder, filesToDelete)
 		if err != nil {
 			return err
@@ -73,9 +82,11 @@ func (db *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
 		return err
 	}
 
-	filteredMap := utils.FilterMapBy(storageMap, func(key, _ string) bool {
-		return utils.FileSliceContins(files, key)
+	filteredMap := FilterMapBy(storageMap, func(key, _ string) bool {
+		return FileSliceContins(files, key)
 	})
 
-	return db.storage.FromMap(filteredMap)
+	db.storage.FromMap(filteredMap)
+
+	return db.storage.Commit()
 }

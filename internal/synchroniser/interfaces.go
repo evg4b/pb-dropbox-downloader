@@ -1,4 +1,4 @@
-package internal
+package synchroniser
 
 import (
 	"io"
@@ -9,11 +9,11 @@ import (
 type DataStorage interface {
 	Get(string) (string, error)
 	ToMap() (map[string]string, error)
-	FromMap(map[string]string) error
-	KeyExists(string) bool
+	FromMap(map[string]string)
+	KeyExists(string) (bool, error)
 	Commit() error
-	Add(string, string)
-	Remove(string)
+	Add(string, string) error
+	Remove(string) error
 }
 
 // Dropbox is intereface to dropbox client wrapper.

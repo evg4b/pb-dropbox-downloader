@@ -5,7 +5,7 @@ package main
 
 import (
 	"os"
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 )
 
 func main() {

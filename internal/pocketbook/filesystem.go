@@ -2,7 +2,7 @@ package pocketbook
 
 import (
 	"path/filepath"
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 )
 
 // IntrenalStoragePath path to the mounted internal storage folder.

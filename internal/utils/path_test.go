@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

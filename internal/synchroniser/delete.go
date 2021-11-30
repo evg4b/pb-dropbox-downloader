@@ -3,7 +3,7 @@ package synchroniser
 import (
 	"fmt"
 	"log"
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 )
 
 func (db *DropboxSynchroniser) delete(folder string, files []string) error {
@@ -17,7 +17,13 @@ func (db *DropboxSynchroniser) delete(folder string, files []string) error {
 		}
 
 		fmt.Fprintf(db.output, "%s .... [ok]\n", file)
-		db.storage.Remove(file)
+		err = db.storage.Remove(file)
+		if err != nil {
+			fmt.Fprintf(db.output, "%s .... [filed]\n", file)
+			log.Println(err)
+
+			return err
+		}
 	}
 
 	return nil

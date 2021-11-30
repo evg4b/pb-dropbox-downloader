@@ -3,7 +3,7 @@ package dropbox
 import (
 	"io"
 	"path/filepath"
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 
 	dropboxLib "github.com/tj/go-dropbox"
 )

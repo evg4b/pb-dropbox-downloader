@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// CheckError error by string, where expected string is empty then error should be null.
+// AssertError error by string, where expected string is empty then error should be null.
 // Otherwise error message should be matched to string.
-func CheckError(t *testing.T, expected string, actual error) {
+func AssertError(t *testing.T, expected string, actual error) {
 	t.Helper()
 
 	if len(expected) > 0 {

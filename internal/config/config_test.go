@@ -67,7 +67,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual, err := config.LoadConfig(fs, tt.configPath)
 
-			testutils.CheckError(t, tt.expectedError, err)
+			testutils.AssertError(t, tt.expectedError, err)
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"pb-dropbox-downloader/internal/dropbox"
+	"pb-dropbox-downloader/internal/utils"
 	"pb-dropbox-downloader/testing/mocks"
-	"pb-dropbox-downloader/utils"
 	"strings"
 	"testing"
 

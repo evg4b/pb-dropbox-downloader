@@ -5,7 +5,7 @@ import (
 	"log"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/dropbox"
-	"pb-dropbox-downloader/utils"
+	"pb-dropbox-downloader/internal/utils"
 	"sync"
 
 	"github.com/c2h5oh/datasize"
@@ -58,7 +58,13 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 		}
 
 		db.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
-		db.storage.Add(file.Path, file.Hash)
+		err = db.storage.Add(file.Path, file.Hash)
+		if err != nil {
+			db.printf("%s .... [filed]", filepath.Base(file.Path))
+			log.Println(err)
+
+			continue
+		}
 	}
 }
 

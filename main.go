@@ -41,7 +41,10 @@ func mainInternal(w io.Writer) error {
 
 	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(syncConfig.AccessToken))
 	dropboxClient := dropbox.NewClient(dropbox.WithGoDropbox(dropboxLibClient))
-	storage := datastorage.NewFileStorage(fs, pocketbook.Share(databaseFileName))
+	storage := datastorage.NewFileStorage(
+		datastorage.WithFilesystem(fs),
+		datastorage.WithConfigPath(pocketbook.Share(databaseFileName)),
+	)
 
 	synchroniser := synchroniser.NewSynchroniser(
 		synchroniser.WithStorage(storage),

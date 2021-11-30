@@ -7,8 +7,8 @@ import (
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/dropbox"
 	sync "pb-dropbox-downloader/internal/synchroniser"
+	"pb-dropbox-downloader/internal/utils"
 	"pb-dropbox-downloader/testing/testutils"
-	"pb-dropbox-downloader/utils"
 	"strings"
 	"testing"
 
@@ -27,7 +27,10 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 
 	fs := memfs.New()
 
-	storage := datastorage.NewFileStorage(fs, filepath.Join(t.TempDir(), "test.bin"))
+	storage := datastorage.NewFileStorage(
+		datastorage.WithFilesystem(fs),
+		datastorage.WithConfigPath(filepath.Join(t.TempDir(), "test.bin")),
+	)
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
 	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
@@ -63,7 +66,10 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 
 	fs := memfs.New()
 
-	storage := datastorage.NewFileStorage(fs, filepath.Join(t.TempDir(), "test.bin"))
+	storage := datastorage.NewFileStorage(
+		datastorage.WithFilesystem(fs),
+		datastorage.WithConfigPath(filepath.Join(t.TempDir(), "test.bin")),
+	)
 
 	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
 	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))

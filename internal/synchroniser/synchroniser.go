@@ -3,16 +3,15 @@ package synchroniser
 import (
 	"fmt"
 	"io"
-	"pb-dropbox-downloader/internal"
 
 	"github.com/go-git/go-billy/v5"
 )
 
 // DropboxSynchroniser Dropbox data synchroniser app structure.
 type DropboxSynchroniser struct {
-	storage        internal.DataStorage
+	storage        DataStorage
 	files          billy.Filesystem
-	dropbox        internal.Dropbox
+	dropbox        Dropbox
 	maxParallelism int
 	output         io.Writer
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/kelindar/binary"
 )
 
+type MarshalFunc = func(interface{}) ([]byte, error)
+type UnmarshalFunc = func([]byte, interface{}) error
+
 var ErrKeyDoesNotExists = errors.New("key does not exists")
 
 type FileStorage struct {
@@ -17,22 +20,30 @@ type FileStorage struct {
 	mu         sync.Mutex
 	files      billy.Filesystem
 	configPath string
+	unmarshal  UnmarshalFunc
+	marshal    MarshalFunc
 }
 
-func NewFileStorage(files billy.Filesystem, configPath string) *FileStorage {
-	return &FileStorage{
-		data:       nil,
-		files:      files,
-		configPath: configPath,
+func NewFileStorage(options ...storageOption) *FileStorage {
+	storage := &FileStorage{
 		mu:         sync.Mutex{},
+		unmarshal:  binary.Unmarshal,
+		marshal:    binary.Marshal,
+		configPath: "storage.bin",
 	}
+
+	for _, option := range options {
+		option(storage)
+	}
+
+	return storage
 }
 
-func (storage *FileStorage) Get(key string) (string, error) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+func (s *FileStorage) Get(key string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	data, err := storage.preload()
+	data, err := s.load()
 	if err != nil {
 		return "", err
 	}
@@ -44,11 +55,11 @@ func (storage *FileStorage) Get(key string) (string, error) {
 	return "", ErrKeyDoesNotExists
 }
 
-func (storage *FileStorage) ToMap() (map[string]string, error) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+func (s *FileStorage) ToMap() (map[string]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	data, err := storage.preload()
+	data, err := s.load()
 	if err != nil {
 		return nil, err
 	}
@@ -56,83 +67,85 @@ func (storage *FileStorage) ToMap() (map[string]string, error) {
 	return data, nil
 }
 
-func (storage *FileStorage) FromMap(data map[string]string) error {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+func (s *FileStorage) FromMap(data map[string]string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	storage.data = data
-
-	if err := storage.unload(); err != nil {
-		return err
-	}
-
-	return nil
+	s.data = data
 }
 
-func (storage *FileStorage) KeyExists(key string) bool {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+func (s *FileStorage) KeyExists(key string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	data, err := storage.preload()
+	data, err := s.load()
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	_, ok := data[key]
 
-	return ok
+	return ok, nil
 }
 
-func (storage *FileStorage) Commit() error {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+func (s *FileStorage) Commit() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	return storage.unload()
-}
-
-func (storage *FileStorage) Add(key, value string) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
-
-	storage.data[key] = value
-}
-
-func (storage *FileStorage) Remove(key string) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
-
-	delete(storage.data, key)
-}
-
-func (storage *FileStorage) unload() error {
-	data, err := binary.Marshal(storage.data)
+	data, err := s.marshal(s.data)
 	if err != nil {
 		return err
 	}
 
-	return util.WriteFile(storage.files, storage.configPath, data, os.ModePerm)
+	return util.WriteFile(s.files, s.configPath, data, os.ModePerm)
 }
 
-func (storage *FileStorage) preload() (map[string]string, error) {
-	if storage.data == nil {
-		storage.data = make(map[string]string)
+func (s *FileStorage) Add(key, value string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-		data, err := util.ReadFile(storage.files, storage.configPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return storage.data, nil
-			}
-
-			return storage.data, err
-		}
-
-		err = binary.Unmarshal(data, &storage.data)
-		if err != nil {
-			return storage.data, err
-		}
-
-		return storage.data, nil
+	if _, err := s.load(); err != nil {
+		return err
 	}
 
-	return storage.data, nil
+	s.data[key] = value
+
+	return nil
+}
+
+func (s *FileStorage) Remove(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, err := s.load(); err != nil {
+		return err
+	}
+
+	delete(s.data, key)
+
+	return nil
+}
+
+func (s *FileStorage) load() (map[string]string, error) {
+	if s.data == nil {
+		s.data = make(map[string]string)
+
+		data, err := util.ReadFile(s.files, s.configPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return s.data, nil
+			}
+
+			return s.data, err
+		}
+
+		err = s.unmarshal(data, &s.data)
+		if err != nil {
+			return s.data, err
+		}
+
+		return s.data, nil
+	}
+
+	return s.data, nil
 }
