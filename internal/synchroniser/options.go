@@ -2,7 +2,6 @@ package synchroniser
 
 import (
 	"io"
-	"pb-dropbox-downloader/infrastructure"
 	"pb-dropbox-downloader/internal"
 
 	"github.com/go-git/go-billy/v5"
@@ -22,7 +21,7 @@ func WithFileSystem(files billy.Filesystem) synchroniserOption {
 	}
 }
 
-func WithDropboxClient(dropbox infrastructure.Dropbox) synchroniserOption {
+func WithDropboxClient(dropbox internal.Dropbox) synchroniserOption {
 	return func(ds *DropboxSynchroniser) {
 		ds.dropbox = dropbox
 	}

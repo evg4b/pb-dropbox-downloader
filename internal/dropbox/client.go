@@ -3,7 +3,7 @@ package dropbox
 import (
 	"io"
 	"path/filepath"
-	"pb-dropbox-downloader/infrastructure"
+	"pb-dropbox-downloader/internal"
 	"pb-dropbox-downloader/utils"
 
 	dropboxLib "github.com/tj/go-dropbox"
@@ -23,7 +23,7 @@ func NewClient(files dropboxFiles, account *dropboxLib.GetCurrentAccountOutput) 
 }
 
 // GetFiles returns files in application folder (include subfolder to).
-func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
+func (client *Client) GetFiles() ([]internal.RemoteFile, error) {
 	out, err := client.files.ListFolder(&dropboxLib.ListFolderInput{
 		Path:      rootDir,
 		Recursive: true,
@@ -32,10 +32,10 @@ func (client *Client) GetFiles() ([]infrastructure.RemoteFile, error) {
 		return nil, err
 	}
 
-	mappedFiles := []infrastructure.RemoteFile{}
+	mappedFiles := []internal.RemoteFile{}
 	for _, entry := range out.Entries {
 		if isFile(entry) {
-			mappedFiles = append(mappedFiles, infrastructure.RemoteFile{
+			mappedFiles = append(mappedFiles, internal.RemoteFile{
 				Path: filepath.ToSlash(entry.PathLower[1:]),
 				Hash: entry.ContentHash,
 				Size: entry.Size,

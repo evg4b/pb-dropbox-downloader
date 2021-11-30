@@ -1,7 +1,7 @@
 package pocketbook_test
 
 import (
-	"pb-dropbox-downloader/infrastructure/pocketbook"
+	"pb-dropbox-downloader/internal/pocketbook"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

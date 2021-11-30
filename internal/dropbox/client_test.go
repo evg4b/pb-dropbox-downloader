@@ -3,8 +3,8 @@ package dropbox_test
 import (
 	"errors"
 	"io/ioutil"
-	"pb-dropbox-downloader/infrastructure"
-	"pb-dropbox-downloader/infrastructure/dropbox"
+	"pb-dropbox-downloader/internal"
+	"pb-dropbox-downloader/internal/dropbox"
 	"pb-dropbox-downloader/mocks"
 	"pb-dropbox-downloader/utils"
 	"strings"
@@ -32,7 +32,7 @@ func TestClient_GetFiles(t *testing.T) {
 	files, err := client.GetFiles()
 
 	assert.NoError(t, err)
-	assert.Equal(t, []infrastructure.RemoteFile{
+	assert.Equal(t, []internal.RemoteFile{
 		{Path: "book1.epub", Hash: "00001"},
 		{Path: "book2.epub", Hash: "00002"},
 	}, files)

@@ -1,29 +1,24 @@
-package main
+package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/util"
 )
 
-const (
-	fatalExitCode    = 500
-	parallelism      = 3
-	logFileName      = "pb-dropbox-downloader.log"
-	databaseFileName = "pb-dropbox-downloader.bin"
-	configFileName   = "pb-dropbox-downloader-config.json"
-)
-
-type pbSyncConfig struct {
+type PbSyncConfig struct {
 	AccessToken      string `json:"access_token"`
 	Folder           string `json:"folder"`
 	AllowDeleteFiles bool   `json:"allow_delete_files"`
 	OnSdCard         bool   `json:"on_sd_card"`
 }
 
-func loadConfig(configPath string) (pbSyncConfig, error) {
-	config := pbSyncConfig{}
-	configData, err := ioutil.ReadFile(configPath)
+func LoadConfig(files billy.Filesystem, configPath string) (PbSyncConfig, error) {
+	config := PbSyncConfig{}
+
+	configData, err := util.ReadFile(files, configPath)
 	if err != nil {
 		return config, err
 	}

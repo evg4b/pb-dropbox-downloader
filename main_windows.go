@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"pb-dropbox-downloader/infrastructure/pocketbook"
+	"pb-dropbox-downloader/internal/pocketbook"
 )
 
 // nolint: gochecknoinits

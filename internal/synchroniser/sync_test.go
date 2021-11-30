@@ -4,7 +4,7 @@ package synchroniser_test
 import (
 	"io/ioutil"
 	"path/filepath"
-	infs "pb-dropbox-downloader/infrastructure"
+	infs "pb-dropbox-downloader/internal"
 	"pb-dropbox-downloader/internal/datastorage"
 	sync "pb-dropbox-downloader/internal/synchroniser"
 	"pb-dropbox-downloader/testing/testutils"

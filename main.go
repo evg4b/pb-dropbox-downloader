@@ -4,9 +4,10 @@ import (
 	"io"
 	"log"
 	"os"
-	"pb-dropbox-downloader/infrastructure/dropbox"
-	"pb-dropbox-downloader/infrastructure/pocketbook"
+	"pb-dropbox-downloader/internal/config"
 	"pb-dropbox-downloader/internal/datastorage"
+	"pb-dropbox-downloader/internal/dropbox"
+	"pb-dropbox-downloader/internal/pocketbook"
 	"pb-dropbox-downloader/internal/synchroniser"
 	"pb-dropbox-downloader/utils"
 
@@ -14,8 +15,18 @@ import (
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
+const (
+	fatalExitCode    = 500
+	parallelism      = 3
+	logFileName      = "pb-dropbox-downloader.log"
+	databaseFileName = "pb-dropbox-downloader.bin"
+	configFileName   = "pb-dropbox-downloader-config.json"
+)
+
 func mainInternal(w io.Writer) {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
+
+	fs := osfs.New("")
 
 	const logfilePerm = 0755
 	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
@@ -26,7 +37,7 @@ func mainInternal(w io.Writer) {
 	defer logfile.Close()
 	log.SetOutput(logfile)
 
-	config, err := loadConfig(pocketbook.ConfigPath(configFileName))
+	config, err := config.LoadConfig(fs, pocketbook.ConfigPath(configFileName))
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +48,6 @@ func mainInternal(w io.Writer) {
 		panic(err)
 	}
 
-	fs := osfs.New("")
 	dropboxClient := dropbox.NewClient(dropboxLibClient.Files, account)
 	storage := datastorage.NewFileStorage(fs, pocketbook.Share(databaseFileName))
 

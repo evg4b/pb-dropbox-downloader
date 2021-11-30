@@ -4,16 +4,16 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
-	"pb-dropbox-downloader/infrastructure"
+	"pb-dropbox-downloader/internal"
 	"pb-dropbox-downloader/utils"
 	"sync"
 
 	"github.com/c2h5oh/datasize"
 )
 
-type dataChannel = chan infrastructure.RemoteFile
+type dataChannel = chan internal.RemoteFile
 
-func (db *DropboxSynchroniser) download(folder string, files []infrastructure.RemoteFile) error {
+func (db *DropboxSynchroniser) download(folder string, files []internal.RemoteFile) error {
 	if len(files) == 0 {
 		db.printf("no files to download")
 
@@ -62,7 +62,7 @@ func (db *DropboxSynchroniser) downloadThread(wg *sync.WaitGroup, folder string,
 	}
 }
 
-func (db *DropboxSynchroniser) downloadFile(file infrastructure.RemoteFile, folder string) error {
+func (db *DropboxSynchroniser) downloadFile(file internal.RemoteFile, folder string) error {
 	fileReader, err := db.dropbox.DownloadFile(file.Path)
 	if err != nil {
 		return err
