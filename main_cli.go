@@ -3,8 +3,16 @@
 
 package main
 
-import "os"
+import (
+	"os"
+	"pb-dropbox-downloader/utils"
+)
 
 func main() {
-	mainInternal(os.Stdout)
+	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
+
+	err := mainInternal(os.Stdout)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -14,14 +14,14 @@ import (
 func main() {
 	ink.DefaultFontHeight = 20
 	ink.RunCLI(func(ctx context.Context, w io.Writer) error {
+		defer utils.PanicInterceptor(os.Exit, fatalExitCode)
+
 		_, err := ink.KeepNetwork()
 		if err != nil {
 			fmt.Fprintf(w, "Error: %v", err)
 			return nil
 		}
 
-		mainInternal(w)
-
-		return nil
+		return mainInternal(w)
 	}, nil)
 }

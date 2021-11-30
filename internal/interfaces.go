@@ -2,8 +2,6 @@ package internal
 
 import (
 	"io"
-
-	"github.com/nickalie/fskv"
 )
 
 // DataStorage interface to storage key-value data.
@@ -48,12 +46,4 @@ type Dropbox interface {
 	AccountDisplayName() string
 	// AccountEmail returns account display email.
 	AccountEmail() string
-}
-
-type Database interface {
-	GetBucket(name string) (*fskv.Bucket, error)
-	Set(key string, value []byte)
-	Get(key string)
-	Scan(prefix string, f func(key string, value []byte) bool)
-	Remove(keys ...string) error
 }

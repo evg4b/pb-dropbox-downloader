@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/util"
@@ -20,12 +20,13 @@ func LoadConfig(files billy.Filesystem, configPath string) (PbSyncConfig, error)
 
 	configData, err := util.ReadFile(files, configPath)
 	if err != nil {
-		return config, err
+		return config, fmt.Errorf("failed to loaded config %v: %w", configPath, err)
 	}
 
-	log.Printf("loaded configuration from '%s'", configPath)
-
 	err = json.Unmarshal(configData, &config)
+	if err != nil {
+		return config, fmt.Errorf("failed to unmarshal config file %w", err)
+	}
 
-	return config, err
+	return config, nil
 }

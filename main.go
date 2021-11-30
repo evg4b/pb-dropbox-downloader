@@ -9,7 +9,6 @@ import (
 	"pb-dropbox-downloader/internal/dropbox"
 	"pb-dropbox-downloader/internal/pocketbook"
 	"pb-dropbox-downloader/internal/synchroniser"
-	"pb-dropbox-downloader/utils"
 
 	"github.com/go-git/go-billy/v5/osfs"
 	dropboxLib "github.com/tj/go-dropbox"
@@ -23,15 +22,13 @@ const (
 	configFileName   = "pb-dropbox-downloader-config.json"
 )
 
-func mainInternal(w io.Writer) {
-	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
-
+func mainInternal(w io.Writer) error {
 	fs := osfs.New("")
 
 	const logfilePerm = 0755
 	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	defer logfile.Close()
@@ -39,13 +36,13 @@ func mainInternal(w io.Writer) {
 
 	config, err := config.LoadConfig(fs, pocketbook.ConfigPath(configFileName))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(config.AccessToken))
 	account, err := dropboxLibClient.Users.GetCurrentAccount()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	dropboxClient := dropbox.NewClient(dropboxLibClient.Files, account)
@@ -66,6 +63,8 @@ func mainInternal(w io.Writer) {
 
 	err = synchroniser.Sync(folder, config.AllowDeleteFiles)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
