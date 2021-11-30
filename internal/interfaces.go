@@ -2,6 +2,7 @@ package internal
 
 import (
 	"io"
+	"pb-dropbox-downloader/internal/dropbox"
 )
 
 // DataStorage interface to storage key-value data.
@@ -15,17 +16,10 @@ type DataStorage interface {
 	Remove(string)
 }
 
-// RemoteFile is structure to describe file in dropbox.
-type RemoteFile struct {
-	Path string
-	Hash string
-	Size uint64
-}
-
 // Dropbox is intereface to dropbox client wrapper.
 type Dropbox interface {
 	// GetFiles returns files in application folder (include subfolder to).
-	GetFiles() ([]RemoteFile, error)
+	GetFiles() ([]dropbox.RemoteFile, error)
 	// DownloadFile downloaded file by path.
 	DownloadFile(string) (io.ReadCloser, error)
 	// AccountDisplayName returns account display name.

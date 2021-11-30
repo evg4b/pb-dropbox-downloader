@@ -6,7 +6,7 @@ package mocks
 
 import (
 	"io"
-	mm_internal "pb-dropbox-downloader/internal"
+	"pb-dropbox-downloader/internal/dropbox"
 	"sync"
 	mm_atomic "sync/atomic"
 	mm_time "time"
@@ -36,7 +36,7 @@ type DropboxMock struct {
 	beforeDownloadFileCounter uint64
 	DownloadFileMock          mDropboxMockDownloadFile
 
-	funcGetFiles          func() (ra1 []mm_internal.RemoteFile, err error)
+	funcGetFiles          func() (ra1 []dropbox.RemoteFile, err error)
 	inspectFuncGetFiles   func()
 	afterGetFilesCounter  uint64
 	beforeGetFilesCounter uint64
@@ -580,7 +580,7 @@ type DropboxMockGetFilesExpectation struct {
 
 // DropboxMockGetFilesResults contains results of the Dropbox.GetFiles
 type DropboxMockGetFilesResults struct {
-	ra1 []mm_internal.RemoteFile
+	ra1 []dropbox.RemoteFile
 	err error
 }
 
@@ -609,7 +609,7 @@ func (mmGetFiles *mDropboxMockGetFiles) Inspect(f func()) *mDropboxMockGetFiles 
 }
 
 // Return sets up results that will be returned by Dropbox.GetFiles
-func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []mm_internal.RemoteFile, err error) *DropboxMock {
+func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []dropbox.RemoteFile, err error) *DropboxMock {
 	if mmGetFiles.mock.funcGetFiles != nil {
 		mmGetFiles.mock.t.Fatalf("DropboxMock.GetFiles mock is already set by Set")
 	}
@@ -622,7 +622,7 @@ func (mmGetFiles *mDropboxMockGetFiles) Return(ra1 []mm_internal.RemoteFile, err
 }
 
 //Set uses given function f to mock the Dropbox.GetFiles method
-func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []mm_internal.RemoteFile, err error)) *DropboxMock {
+func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []dropbox.RemoteFile, err error)) *DropboxMock {
 	if mmGetFiles.defaultExpectation != nil {
 		mmGetFiles.mock.t.Fatalf("Default expectation is already set for the Dropbox.GetFiles method")
 	}
@@ -636,7 +636,7 @@ func (mmGetFiles *mDropboxMockGetFiles) Set(f func() (ra1 []mm_internal.RemoteFi
 }
 
 // GetFiles implements internal.Dropbox
-func (mmGetFiles *DropboxMock) GetFiles() (ra1 []mm_internal.RemoteFile, err error) {
+func (mmGetFiles *DropboxMock) GetFiles() (ra1 []dropbox.RemoteFile, err error) {
 	mm_atomic.AddUint64(&mmGetFiles.beforeGetFilesCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetFiles.afterGetFilesCounter, 1)
 

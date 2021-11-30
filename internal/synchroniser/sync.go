@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"pb-dropbox-downloader/internal"
+	"pb-dropbox-downloader/internal/dropbox"
 	"pb-dropbox-downloader/utils"
 	"strings"
 )
@@ -33,7 +33,7 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 		return err
 	}
 
-	filesToDownload := []internal.RemoteFile{}
+	filesToDownload := []dropbox.RemoteFile{}
 	for _, remoteFile := range remotesFiles {
 		if hash, err := db.storage.Get(remoteFile.Path); err == nil {
 			if strings.EqualFold(hash, remoteFile.Hash) {

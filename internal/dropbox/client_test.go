@@ -3,7 +3,6 @@ package dropbox_test
 import (
 	"errors"
 	"io/ioutil"
-	"pb-dropbox-downloader/internal"
 	"pb-dropbox-downloader/internal/dropbox"
 	"pb-dropbox-downloader/testing/mocks"
 	"pb-dropbox-downloader/utils"
@@ -27,12 +26,12 @@ func TestClient_GetFiles(t *testing.T) {
 	}
 	filesMock := mocks.NewDropboxFilesMock(t).
 		ListFolderMock.Expect(&input).Return(&output, nil)
+	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
 
-	client := dropbox.NewClient(filesMock, &mocks.Account)
 	files, err := client.GetFiles()
 
 	assert.NoError(t, err)
-	assert.Equal(t, []internal.RemoteFile{
+	assert.Equal(t, []dropbox.RemoteFile{
 		{Path: "book1.epub", Hash: "00001"},
 		{Path: "book2.epub", Hash: "00002"},
 	}, files)
@@ -43,8 +42,8 @@ func TestClient_GetFiles_Error(t *testing.T) {
 	input := dropboxLib.ListFolderInput{Path: "/", Recursive: true}
 	filesMock := mocks.NewDropboxFilesMock(t).
 		ListFolderMock.Expect(&input).Return(nil, expectedError)
+	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
 
-	client := dropbox.NewClient(filesMock, &mocks.Account)
 	files, err := client.GetFiles()
 
 	assert.Equal(t, expectedError, err)
@@ -62,7 +61,8 @@ func TestClient_DownloadFile(t *testing.T) {
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(&output, nil)
 
-	client := dropbox.NewClient(filesMock, &mocks.Account)
+	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
+
 	reader, err := client.DownloadFile(file)
 
 	assert.NoError(t, err)
@@ -75,10 +75,22 @@ func TestClient_DownloadFile_Error(t *testing.T) {
 	expectedError := errors.New("test error")
 	filesMock := mocks.NewDropboxFilesMock(t).
 		DownloadMock.Expect(&input).Return(nil, expectedError)
+	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
 
-	client := dropbox.NewClient(filesMock, &mocks.Account)
 	reader, err := client.DownloadFile(file)
 
 	assert.Equal(t, expectedError, err)
 	assert.Nil(t, reader)
+}
+
+func TestClient_AccountDisplayName(t *testing.T) {
+	client := dropbox.NewClient(dropbox.WithAccount(&mocks.Account))
+
+	assert.Equal(t, mocks.Account.Name.DisplayName, client.AccountDisplayName())
+}
+
+func TestClient_AccountEmail(t *testing.T) {
+	client := dropbox.NewClient(dropbox.WithAccount(&mocks.Account))
+
+	assert.Equal(t, mocks.Account.Email, client.AccountEmail())
 }

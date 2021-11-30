@@ -4,8 +4,8 @@ package synchroniser_test
 import (
 	"io/ioutil"
 	"path/filepath"
-	infs "pb-dropbox-downloader/internal"
 	"pb-dropbox-downloader/internal/datastorage"
+	"pb-dropbox-downloader/internal/dropbox"
 	sync "pb-dropbox-downloader/internal/synchroniser"
 	"pb-dropbox-downloader/testing/testutils"
 	"pb-dropbox-downloader/utils"
@@ -18,9 +18,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var book1 = infs.RemoteFile{Path: "book1.epub", Hash: "00001"}
-var book3 = infs.RemoteFile{Path: "book3.epub", Hash: "00003"}
-var book5 = infs.RemoteFile{Path: "book5.epub", Hash: "00005"}
+var book1 = dropbox.RemoteFile{Path: "book1.epub", Hash: "00001"}
+var book3 = dropbox.RemoteFile{Path: "book3.epub", Hash: "00003"}
+var book5 = dropbox.RemoteFile{Path: "book5.epub", Hash: "00005"}
 
 func TestDropboxSynchroniser_Sync(t *testing.T) {
 	folder := "/mnt/ext1/dropbox"
@@ -34,7 +34,7 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 
 	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
+		GetFilesMock.Return([]dropbox.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
 		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
 		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).
@@ -69,7 +69,7 @@ func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
 	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
 	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
 	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]infs.RemoteFile{book1, book3, book5}, nil).
+		GetFilesMock.Return([]dropbox.RemoteFile{book1, book3, book5}, nil).
 		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
 		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
 		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).

@@ -34,18 +34,13 @@ func mainInternal(w io.Writer) error {
 	defer logfile.Close()
 	log.SetOutput(logfile)
 
-	config, err := config.LoadConfig(fs, pocketbook.ConfigPath(configFileName))
+	syncConfig, err := config.LoadConfig(fs, pocketbook.ConfigPath(configFileName))
 	if err != nil {
 		return err
 	}
 
-	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(config.AccessToken))
-	account, err := dropboxLibClient.Users.GetCurrentAccount()
-	if err != nil {
-		return err
-	}
-
-	dropboxClient := dropbox.NewClient(dropboxLibClient.Files, account)
+	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(syncConfig.AccessToken))
+	dropboxClient := dropbox.NewClient(dropbox.WithGoDropbox(dropboxLibClient))
 	storage := datastorage.NewFileStorage(fs, pocketbook.Share(databaseFileName))
 
 	synchroniser := synchroniser.NewSynchroniser(
@@ -56,15 +51,10 @@ func mainInternal(w io.Writer) error {
 		synchroniser.WithMaxParallelism(parallelism),
 	)
 
-	folder := pocketbook.Internal(config.Folder)
-	if config.OnSdCard {
-		folder = pocketbook.SdCard(config.Folder)
+	folder := pocketbook.Internal(syncConfig.Folder)
+	if syncConfig.OnSdCard {
+		folder = pocketbook.SdCard(syncConfig.Folder)
 	}
 
-	err = synchroniser.Sync(folder, config.AllowDeleteFiles)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
 }
