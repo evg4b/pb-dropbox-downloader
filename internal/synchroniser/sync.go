@@ -35,7 +35,7 @@ func (db *DropboxSynchroniser) Sync(folder string, remove bool) error {
 
 	filesToDownload := []internal.RemoteFile{}
 	for _, remoteFile := range remotesFiles {
-		if hash, ok := db.storage.Get(remoteFile.Path); ok {
+		if hash, err := db.storage.Get(remoteFile.Path); err == nil {
 			if strings.EqualFold(hash, remoteFile.Hash) {
 				continue
 			}

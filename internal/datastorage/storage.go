@@ -1,6 +1,7 @@
 package datastorage
 
 import (
+	"errors"
 	"os"
 	"sync"
 
@@ -8,6 +9,8 @@ import (
 	"github.com/go-git/go-billy/v5/util"
 	"github.com/kelindar/binary"
 )
+
+var ErrKeyDoesNotExists = errors.New("key does not exists")
 
 type FileStorage struct {
 	data       map[string]string
@@ -25,37 +28,37 @@ func NewFileStorage(files billy.Filesystem, configPath string) *FileStorage {
 	}
 }
 
-func (storage *FileStorage) Get(key string) (string, bool) {
+func (storage *FileStorage) Get(key string) (string, error) {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
 
-	if err := storage.preload(); err != nil {
-		return "", false
+	data, err := storage.preload()
+	if err != nil {
+		return "", err
 	}
 
-	value, ok := storage.data[key]
+	if value, ok := data[key]; ok {
+		return value, nil
+	}
 
-	return value, ok
+	return "", ErrKeyDoesNotExists
 }
 
 func (storage *FileStorage) ToMap() (map[string]string, error) {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
 
-	if err := storage.preload(); err != nil {
+	data, err := storage.preload()
+	if err != nil {
 		return nil, err
 	}
 
-	return storage.data, nil
+	return data, nil
 }
 
 func (storage *FileStorage) FromMap(data map[string]string) error {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
-
-	if err := storage.preload(); err != nil {
-		return err
-	}
 
 	storage.data = data
 
@@ -70,11 +73,12 @@ func (storage *FileStorage) KeyExists(key string) bool {
 	storage.mu.Lock()
 	defer storage.mu.Unlock()
 
-	if err := storage.preload(); err != nil {
+	data, err := storage.preload()
+	if err != nil {
 		return false
 	}
 
-	_, ok := storage.data[key]
+	_, ok := data[key]
 
 	return ok
 }
@@ -109,21 +113,26 @@ func (storage *FileStorage) unload() error {
 	return util.WriteFile(storage.files, storage.configPath, data, os.ModePerm)
 }
 
-func (storage *FileStorage) preload() error {
+func (storage *FileStorage) preload() (map[string]string, error) {
 	if storage.data == nil {
 		storage.data = make(map[string]string)
 
 		data, err := util.ReadFile(storage.files, storage.configPath)
-		if os.IsNotExist(err) {
-			return nil
-		}
-
 		if err != nil {
-			return err
+			if os.IsNotExist(err) {
+				return storage.data, nil
+			}
+
+			return storage.data, err
 		}
 
-		return binary.Unmarshal(data, &storage.data)
+		err = binary.Unmarshal(data, &storage.data)
+		if err != nil {
+			return storage.data, err
+		}
+
+		return storage.data, nil
 	}
 
-	return nil
+	return storage.data, nil
 }

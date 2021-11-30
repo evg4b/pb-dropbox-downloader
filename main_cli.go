@@ -10,9 +10,7 @@ import (
 
 func main() {
 	defer utils.PanicInterceptor(os.Exit, fatalExitCode)
-
-	err := mainInternal(os.Stdout)
-	if err != nil {
+	if err := mainInternal(os.Stdout); err != nil {
 		panic(err)
 	}
 }
