@@ -2,6 +2,7 @@ package datastorage
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 
@@ -97,7 +98,12 @@ func (s *FileStorage) Commit() error {
 		return err
 	}
 
-	return util.WriteFile(s.files, s.configPath, data, os.ModePerm)
+	err = util.WriteFile(s.files, s.configPath, data, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed commit data changes: %w", err)
+	}
+
+	return nil
 }
 
 func (s *FileStorage) Add(key, value string) error {
@@ -136,7 +142,7 @@ func (s *FileStorage) load() (map[string]string, error) {
 				return s.data, nil
 			}
 
-			return s.data, err
+			return s.data, fmt.Errorf("failed to load database: %w", err)
 		}
 
 		err = s.unmarshal(data, &s.data)

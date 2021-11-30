@@ -1,6 +1,7 @@
 package dropbox
 
 import (
+	"fmt"
 	"io"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/utils"
@@ -34,13 +35,13 @@ func (c *Client) GetFiles() ([]RemoteFile, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed getting files list: %w", err)
 	}
 
-	mappedFiles := []RemoteFile{}
+	files := []RemoteFile{}
 	for _, entry := range output.Entries {
 		if isFile(entry) {
-			mappedFiles = append(mappedFiles, RemoteFile{
+			files = append(files, RemoteFile{
 				Path: filepath.ToSlash(entry.PathLower[1:]),
 				Hash: entry.ContentHash,
 				Size: entry.Size,
@@ -48,7 +49,7 @@ func (c *Client) GetFiles() ([]RemoteFile, error) {
 		}
 	}
 
-	return mappedFiles, nil
+	return files, nil
 }
 
 // DownloadFile downloaded file by path.
@@ -58,7 +59,7 @@ func (c *Client) DownloadFile(path string) (io.ReadCloser, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to download file '%s': %w", path, err)
 	}
 
 	return output.Body, nil

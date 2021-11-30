@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -28,7 +29,7 @@ func mainInternal(w io.Writer) error {
 	const logfilePerm = 0755
 	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open log file: %w", err)
 	}
 
 	defer logfile.Close()
@@ -36,7 +37,7 @@ func mainInternal(w io.Writer) error {
 
 	syncConfig, err := config.LoadConfig(fs, pocketbook.ConfigPath(configFileName))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed loaded configuration: %w", err)
 	}
 
 	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(syncConfig.AccessToken))
@@ -59,5 +60,10 @@ func mainInternal(w io.Writer) error {
 		folder = pocketbook.SdCard(syncConfig.Folder)
 	}
 
-	return synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
+	err = synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
+	if err != nil {
+		return fmt.Errorf("synchronization finished with error: %w", err)
+	}
+
+	return nil
 }

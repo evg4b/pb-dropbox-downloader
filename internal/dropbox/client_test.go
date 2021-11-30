@@ -38,15 +38,14 @@ func TestClient_GetFiles(t *testing.T) {
 }
 
 func TestClient_GetFiles_Error(t *testing.T) {
-	expectedError := errors.New("test error")
 	input := dropboxLib.ListFolderInput{Path: "/", Recursive: true}
 	filesMock := mocks.NewDropboxFilesMock(t).
-		ListFolderMock.Expect(&input).Return(nil, expectedError)
+		ListFolderMock.Expect(&input).Return(nil, errors.New("test error"))
 	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
 
 	files, err := client.GetFiles()
 
-	assert.Equal(t, expectedError, err)
+	assert.EqualError(t, err, "failed getting files list: test error")
 	assert.Nil(t, files)
 }
 
@@ -72,14 +71,13 @@ func TestClient_DownloadFile(t *testing.T) {
 func TestClient_DownloadFile_Error(t *testing.T) {
 	file := "book1.epub"
 	input := dropboxLib.DownloadInput{Path: utils.JoinPath("/", file)}
-	expectedError := errors.New("test error")
 	filesMock := mocks.NewDropboxFilesMock(t).
-		DownloadMock.Expect(&input).Return(nil, expectedError)
+		DownloadMock.Expect(&input).Return(nil, errors.New("test error"))
 	client := dropbox.NewClient(dropbox.WithFiles(filesMock))
 
 	reader, err := client.DownloadFile(file)
 
-	assert.Equal(t, expectedError, err)
+	assert.EqualError(t, err, "failed to download file 'book1.epub': test error")
 	assert.Nil(t, reader)
 }
 
