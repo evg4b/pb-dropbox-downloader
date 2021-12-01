@@ -1,101 +1,120 @@
 // nolint: dupl
+
 package synchroniser_test
 
 import (
-	"io/ioutil"
-	"path/filepath"
+	"bytes"
+	"errors"
+	"io"
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/dropbox"
-	sync "pb-dropbox-downloader/internal/synchroniser"
-	"pb-dropbox-downloader/internal/utils"
+	"pb-dropbox-downloader/internal/synchroniser"
+	"pb-dropbox-downloader/testing/mocks"
 	"pb-dropbox-downloader/testing/testutils"
-	"strings"
 	"testing"
 
-	"pb-dropbox-downloader/testing/mocks"
-
+	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/stretchr/testify/assert"
 )
 
-var book1 = dropbox.RemoteFile{Path: "book1.epub", Hash: "00001"}
-var book3 = dropbox.RemoteFile{Path: "book3.epub", Hash: "00003"}
-var book5 = dropbox.RemoteFile{Path: "book5.epub", Hash: "00005"}
-
 func TestDropboxSynchroniser_Sync(t *testing.T) {
-	folder := "/mnt/ext1/dropbox"
+	tests := []struct {
+		name        string
+		remove      bool
+		storage     synchroniser.DataStorage
+		dropbox     synchroniser.Dropbox
+		fs          billy.Filesystem
+		expectedErr string
+		expected    map[string]string
+	}{
+		{
+			name: "no files to sync",
+			storage: mocks.NewDataStorageMock(t).
+				ToMapMock.Return(map[string]string{}, nil).
+				FromMapMock.Return().
+				CommitMock.Return(nil),
+			dropbox: mocks.NewDropboxMock(t).
+				AccountEmailMock.Return("test").
+				AccountDisplayNameMock.Return("test").
+				GetFilesMock.Return([]dropbox.RemoteFile{}, nil),
+			fs: memfs.New(),
+		},
+		{
+			name: "files system error",
+			storage: mocks.NewDataStorageMock(t).
+				ToMapMock.Return(map[string]string{}, nil).
+				FromMapMock.Return().
+				CommitMock.Return(nil),
+			dropbox: mocks.NewDropboxMock(t).
+				AccountEmailMock.Return("test").
+				AccountDisplayNameMock.Return("test").
+				GetFilesMock.Return([]dropbox.RemoteFile{}, nil),
+			fs: mocks.NewFilesystemMock(t).
+				ReadDirMock.Return(nil, errors.New("fs error")),
+			expectedErr: "fs error",
+		},
+		{
+			name: "storage error",
+			storage: mocks.NewDataStorageMock(t).
+				ToMapMock.Return(map[string]string{}, errors.New("storage error")).
+				FromMapMock.Return().
+				CommitMock.Return(nil),
+			dropbox: mocks.NewDropboxMock(t).
+				AccountEmailMock.Return("test").
+				AccountDisplayNameMock.Return("test").
+				GetFilesMock.Return([]dropbox.RemoteFile{}, nil),
+			fs:          memfs.New(),
+			expectedErr: "storage error",
+		},
+		{
+			name: "storage error",
+			storage: mocks.NewDataStorageMock(t).
+				ToMapMock.Return(map[string]string{"demo1": "0001"}, nil).
+				GetMock.When("demo1").Then("0001", nil).
+				GetMock.When("demo2").Then("", datastorage.ErrKeyDoesNotExists).
+				AddMock.Return(nil).
+				FromMapMock.Return().
+				CommitMock.Return(nil),
+			dropbox: mocks.NewDropboxMock(t).
+				AccountEmailMock.Return("test").
+				AccountDisplayNameMock.Return("test").
+				DownloadFileMock.When("demo2").Then(readCloser("test file"), nil).
+				GetFilesMock.Return(
+				[]dropbox.RemoteFile{
+					{Path: "demo1", Hash: "0001", Size: 2132},
+					{Path: "demo2", Hash: "0002", Size: 2132},
+				},
+				nil,
+			),
+			fs: testutils.FsFromMap(t, map[string]string{
+				"./dropbox/demo1": "content",
+			}),
+			expected: map[string]string{
+				"./dropbox/demo1": "content",
+				"./dropbox/demo2": "test file",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			synchroniser := synchroniser.NewSynchroniser(
+				synchroniser.WithStorage(tt.storage),
+				synchroniser.WithFileSystem(tt.fs),
+				synchroniser.WithDropboxClient(tt.dropbox),
+				synchroniser.WithOutput(io.Discard),
+				synchroniser.WithMaxParallelism(3),
+			)
 
-	fs := memfs.New()
+			err := synchroniser.Sync("./dropbox", tt.remove)
 
-	storage := datastorage.NewFileStorage(
-		datastorage.WithFilesystem(fs),
-		datastorage.WithConfigPath(filepath.Join(t.TempDir(), "test.bin")),
-	)
-
-	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
-	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
-	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
-
-	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]dropbox.RemoteFile{book1, book3, book5}, nil).
-		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
-		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).
-		AccountDisplayNameMock.Return("DisplayName").
-		AccountEmailMock.Return("email@mail.com")
-	testutils.MakeFiles(t, fs, map[string]string{
-		utils.JoinPath(folder, book1.Path): "This is book #1",
-		utils.JoinPath(folder, book3.Path): "This is book #3",
-		utils.JoinPath(folder, book5.Path): "This is book #5",
-	})
-
-	synchroniser := sync.NewSynchroniser(
-		sync.WithStorage(storage),
-		sync.WithFileSystem(fs),
-		sync.WithDropboxClient(dropboxMocks),
-		sync.WithMaxParallelism(3),
-	)
-
-	err := synchroniser.Sync(folder, true)
-
-	assert.NoError(t, err)
+			testutils.AssertError(t, tt.expectedErr, err)
+			testutils.AssertFiles(t, tt.fs, "./dropbox", tt.expected)
+		})
+	}
 }
 
-func TestDropboxSynchroniser_Sync_WithoutDelete(t *testing.T) {
-	folder := "/mnt/ext1/dropbox"
+func readCloser(content string) io.ReadCloser {
+	buff := bytes.NewBufferString(content)
 
-	fs := memfs.New()
-
-	storage := datastorage.NewFileStorage(
-		datastorage.WithFilesystem(fs),
-		datastorage.WithConfigPath(filepath.Join(t.TempDir(), "test.bin")),
-	)
-
-	dataReader1 := ioutil.NopCloser(strings.NewReader("This is book #1"))
-	dataReader3 := ioutil.NopCloser(strings.NewReader("This is book #3"))
-	dataReader5 := ioutil.NopCloser(strings.NewReader("This is book #5"))
-	dropboxMocks := mocks.NewDropboxMock(t).
-		GetFilesMock.Return([]dropbox.RemoteFile{book1, book3, book5}, nil).
-		DownloadFileMock.When(book1.Path).Then(dataReader1, nil).
-		DownloadFileMock.When(book3.Path).Then(dataReader3, nil).
-		DownloadFileMock.When(book5.Path).Then(dataReader5, nil).
-		AccountDisplayNameMock.Return("DisplayName").
-		AccountEmailMock.Return("email@mail.com")
-
-	testutils.MakeFiles(t, fs, map[string]string{
-		utils.JoinPath(folder, book1.Path): "This is book #1",
-		utils.JoinPath(folder, book3.Path): "This is book #3",
-		utils.JoinPath(folder, book5.Path): "This is book #5",
-	})
-
-	synchroniser := sync.NewSynchroniser(
-		sync.WithStorage(storage),
-		sync.WithFileSystem(fs),
-		sync.WithDropboxClient(dropboxMocks),
-		sync.WithMaxParallelism(3),
-	)
-
-	err := synchroniser.Sync(folder, false)
-
-	assert.NoError(t, err)
+	return testutils.NopCloser(buff)
 }

@@ -27,6 +27,6 @@ func NewSynchroniser(options ...synchroniserOption) *DropboxSynchroniser {
 	return ds
 }
 
-func (db *DropboxSynchroniser) printf(format string, a ...interface{}) {
-	fmt.Fprintln(db.output, fmt.Sprintf(format, a...))
+func (ds *DropboxSynchroniser) printf(format string, a ...interface{}) {
+	fmt.Fprintln(ds.output, fmt.Sprintf(format, a...))
 }
