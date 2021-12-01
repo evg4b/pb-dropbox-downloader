@@ -2,6 +2,7 @@ package synchroniser
 
 import (
 	"os"
+	"pb-dropbox-downloader/internal/dropbox"
 	"strings"
 )
 
@@ -24,4 +25,13 @@ func filterMapBy(data map[string]string, predicate func(string, string) bool) ma
 	}
 
 	return result
+}
+
+func calculateTheadsCount(maxParallelism int, files []dropbox.RemoteFile) int {
+	filesCount := len(files)
+	if filesCount > maxParallelism {
+		return maxParallelism
+	}
+
+	return filesCount
 }

@@ -2,12 +2,9 @@
 package synchroniser
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/dropbox"
-	"pb-dropbox-downloader/internal/utils"
 	"strings"
 )
 
@@ -61,13 +58,13 @@ func (ds *DropboxSynchroniser) getLocalFiles(folder string) ([]os.FileInfo, erro
 }
 
 func (ds *DropboxSynchroniser) getFilesToDownload() ([]dropbox.RemoteFile, error) {
-	remotesFiles, err := ds.dropbox.GetFiles()
+	remoteFiles, err := ds.dropbox.GetFiles()
 	if err != nil {
 		return nil, err
 	}
 
 	filesToDownload := []dropbox.RemoteFile{}
-	for _, remoteFile := range remotesFiles {
+	for _, remoteFile := range remoteFiles {
 		if hash, err := ds.storage.Get(remoteFile.Path); err == nil {
 			if strings.EqualFold(hash, remoteFile.Hash) {
 				continue
@@ -81,47 +78,16 @@ func (ds *DropboxSynchroniser) getFilesToDownload() ([]dropbox.RemoteFile, error
 }
 
 func (ds *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
-	storageMap, err := ds.storage.ToMap()
+	storageFiles, err := ds.storage.ToMap()
 	if err != nil {
 		return err
 	}
 
-	filteredMap := filterMapBy(storageMap, func(key, _ string) bool {
+	filteredMap := filterMapBy(storageFiles, func(key, _ string) bool {
 		return fileSliceContins(files, key)
 	})
 
 	ds.storage.FromMap(filteredMap)
 
 	return ds.storage.Commit()
-}
-
-func (ds *DropboxSynchroniser) deleteFiles(folder string, files []os.FileInfo) error {
-	for _, file := range files {
-		fileName := file.Name()
-		exist, err := ds.storage.KeyExists(fileName)
-		if err != nil {
-			return err
-		}
-
-		if !exist {
-			err := ds.files.Remove(utils.JoinPath(folder, fileName))
-			if err != nil {
-				fmt.Fprintf(ds.output, "%s .... [filed]\n", file)
-				log.Println(err)
-
-				return err
-			}
-
-			fmt.Fprintf(ds.output, "%s .... [ok]\n", file)
-			err = ds.storage.Remove(fileName)
-			if err != nil {
-				fmt.Fprintf(ds.output, "%s .... [filed]\n", file)
-				log.Println(err)
-
-				return err
-			}
-		}
-	}
-
-	return nil
 }

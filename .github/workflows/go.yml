@@ -30,8 +30,8 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -race -coverprofile='coverage.xml' -covermode=atomic -v ./... 
-      
+      run: go test -coverprofile='coverage.xml' -covermode=atomic -v ./...
+
     - name: Upload coverage profile
       uses: codecov/codecov-action@v1
       with:
