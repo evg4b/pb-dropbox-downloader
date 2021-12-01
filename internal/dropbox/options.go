@@ -1,4 +1,5 @@
 package dropbox
+
 import dropboxLib "github.com/tj/go-dropbox"
 
 type dropboxOption = func(client *Client)

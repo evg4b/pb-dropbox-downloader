@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"pb-dropbox-downloader/internal/datastorage"
+	"pb-dropbox-downloader/testing/mocks"
 	"pb-dropbox-downloader/testing/testutils"
 	"testing"
 
@@ -24,6 +25,7 @@ func TestFileStorage_Get(t *testing.T) {
 
 	tests := []struct {
 		name          string
+		fs            billy.Filesystem
 		key           string
 		configFile    string
 		expected      string
@@ -33,32 +35,44 @@ func TestFileStorage_Get(t *testing.T) {
 			name:          "db file does not exists",
 			key:           "test_key",
 			configFile:    "notexist.bin",
+			fs:            fs,
 			expectedError: datastorage.ErrKeyDoesNotExists.Error(),
 		},
 		{
 			name:          "key does not exists",
 			key:           "test_key",
 			configFile:    "config.bin",
+			fs:            fs,
 			expectedError: datastorage.ErrKeyDoesNotExists.Error(),
 		},
 		{
 			name:       "key exists",
 			key:        "key1",
 			configFile: "config.bin",
+			fs:         fs,
 			expected:   "value1",
 		},
 		{
 			name:          "invalid database",
 			key:           "key1",
 			configFile:    "invalid.bin",
+			fs:            fs,
 			expectedError: "unexpected end of JSON input",
+		},
+		{
+			name:       "fs file reading error",
+			key:        "key1",
+			configFile: "config.bin",
+			fs: mocks.NewFilesystemMock(t).
+				OpenMock.Return(nil, errors.New("fs error")),
+			expectedError: "failed to load database: fs error",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := datastorage.NewFileStorage(
-				datastorage.WithFilesystem(fs),
+				datastorage.WithFilesystem(tt.fs),
 				datastorage.WithConfigPath(tt.configFile),
 				datastorage.WithMarshalFunc(json.Marshal),
 				datastorage.WithUnmarshalFunc(json.Unmarshal),
@@ -279,43 +293,63 @@ func TestFileStorage_Commit(t *testing.T) {
 		name          string
 		expected      map[string]string
 		expectedError string
+		fs            billy.Filesystem
 		marshalFunc   datastorage.MarshalFunc
 	}{
 		{
-			name:        "commit correctly",
-			expected:    map[string]string{},
+			name: "commit correctly",
+			expected: map[string]string{
+				"var1": "data1",
+			},
+			fs: testutils.FsFromMap(t, map[string]string{
+				"storage.bin": "{ }",
+			}),
 			marshalFunc: json.Marshal,
 		},
 		{
 			name:          "marshalling error",
-			expected:      map[string]string{},
 			expectedError: "test error",
+			fs: testutils.FsFromMap(t, map[string]string{
+				"storage.bin": "{ }",
+			}),
 			marshalFunc: func(i interface{}) ([]byte, error) {
 				return []byte{}, errors.New("test error")
 			},
 		},
+		{
+			name: "files system error",
+			fs: mocks.NewFilesystemMock(t).
+				OpenFileMock.Return(nil, errors.New("files system error")),
+			marshalFunc:   json.Marshal,
+			expectedError: "failed commit data changes: files system error",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fs := testutils.FsFromMap(t, map[string]string{
-				"storage.bin": "{ }",
-			})
 			storage := datastorage.NewFileStorage(
 				datastorage.WithMarshalFunc(tt.marshalFunc),
-				datastorage.WithFilesystem(fs),
+				datastorage.WithFilesystem(tt.fs),
 			)
 			storage.FromMap(tt.expected)
 
 			err := storage.Commit()
 
 			testutils.AssertError(t, tt.expectedError, err)
-			assertDatastorageFile(t, fs, tt.expected)
+			assertDatastorageFile(t, tt.fs, tt.expected)
 		})
 	}
 }
 
 func assertDatastorageFile(t *testing.T, fs billy.Filesystem, expected map[string]string) {
 	t.Helper()
+
+	if _, ok := fs.(*mocks.FilesystemMock); ok {
+		return
+	}
+
+	if expected == nil {
+		expected = map[string]string{}
+	}
 
 	data, err := util.ReadFile(fs, "storage.bin")
 	assert.NoError(t, err)
