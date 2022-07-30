@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	perm             = 0755
 	fatalExitCode    = 500
 	parallelism      = 3
 	logFileName      = "pb-dropbox-downloader.log"
@@ -27,8 +28,19 @@ const (
 func mainInternal(w io.Writer) error {
 	fs := osfs.New("")
 
-	const logfilePerm = 0755
-	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
+	paths := [3]string{
+		pocketbook.ConfigPath(""),
+		pocketbook.Share(""),
+	}
+	for _, path := range paths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			if err := os.MkdirAll(path, perm); err != nil {
+				return fmt.Errorf("failed to create dir: %w", err)
+			}
+		}
+	}
+
+	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, perm)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
