@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"pb-dropbox-downloader/internal/config"
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/dropbox"
@@ -63,6 +64,11 @@ func mainInternal(w io.Writer) error {
 	err = synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
 	if err != nil {
 		return fmt.Errorf("synchronization finished with error: %w", err)
+	}
+
+	cmd := exec.Command("/bin/killall", "scanner.app")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to execute command: %w", err)
 	}
 
 	return nil
