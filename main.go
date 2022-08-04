@@ -28,16 +28,12 @@ const (
 func mainInternal(w io.Writer) error {
 	fs := osfs.New("")
 
-	paths := [3]string{
-		pocketbook.ConfigPath(""),
-		pocketbook.Share(""),
+	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
+		return fmt.Errorf("failed to create config dir: %w", err)
 	}
-	for _, path := range paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			if err := os.MkdirAll(path, perm); err != nil {
-				return fmt.Errorf("failed to create dir: %w", err)
-			}
-		}
+
+	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
+		return fmt.Errorf("failed to create share dir: %w", err)
 	}
 
 	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, perm)
