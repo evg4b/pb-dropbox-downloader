@@ -33,21 +33,11 @@
 
 ## How to build
 
-#### via make
-
-**Requirements**: [docker](https://www.docker.com/)
-
-```
-$ make test build
-```
-
-#### via task
-
 **Requirements**: [task v3](https://taskfile.dev/), [golang](https://golang.org/), [docker](https://www.docker.com/). [golang-ci-lint](https://golangci-lint.run/)
 
 Use task for run, build and test application:
 
-```bash
+``` bash
 task # to run application (on local machine)
 task lint # to lint code
 task build-cli # to build cli .app file for reader
@@ -61,17 +51,15 @@ task test-local # to run all tests on local machine
 You can build application with custom [ldflags flags](https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications-ru).
 
 Available flags :
-
--   `main.parallelism` - Number of goroutines used for downloading files (default value `3`)
--   `main.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
--   `main.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
--   `main.configFileName` - Name of configuration file (default value `pb-dropbox-downloader-config.json`)
+- `main.parallelism` - Number of goroutines used for downloading files (default value `3`)
+- `main.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
+- `main.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
+- `main.configFileName` - Name of configuration file (default  value `pb-dropbox-downloader-config.json`)
 
 #### CLI version
 
 powershell:
-
-```powershell
+``` powershell
 $env:GOOS = 'linux'
 $env:GOARCH = 'arm'
 $env:GOARM = '5'
@@ -79,20 +67,18 @@ go build -ldflags="-s -w -X <your custom fdflegs>" -o pb-dropbox-downloader.app 
 ```
 
 bash:
-
-```bash
+``` bash
 GOOS=linux GOARCH=arm GOARM=5 go build -ldflags="-s -w -X <your custom fdflegs>" -o pb-dropbox-downloader.app .
 ```
 
 #### UI version (docker required)
 
-```bash
+``` bash
 docker run --rm -v ${PWD}:/app 5keeve/pocketbook-go-sdk:6.3.0-b288-v1 build -v -tags=UI -ldflags="-s -w -X <your custom fdflegs>" -o pb-dropbox-downloader.app .
 ```
 
 ## Testing:
 
 Currently this application testes only on next devices:
-
 1. Pocketbook 624
-2. Reader book 2 (this device has no application item in menu, but you can find and run program from `gallery`)
+2. Reader book 2 (this device has no application item in menu, but you can find  and run program from `gallery`)
