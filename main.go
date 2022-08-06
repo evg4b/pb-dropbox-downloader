@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"pb-dropbox-downloader/internal/config"
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/dropbox"
@@ -16,6 +17,7 @@ import (
 )
 
 const (
+	perm             = 0755
 	fatalExitCode    = 500
 	parallelism      = 3
 	logFileName      = "pb-dropbox-downloader.log"
@@ -26,8 +28,15 @@ const (
 func mainInternal(w io.Writer) error {
 	fs := osfs.New("")
 
-	const logfilePerm = 0755
-	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, logfilePerm)
+	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
+		return fmt.Errorf("failed to create config dir: %w", err)
+	}
+
+	if err := os.MkdirAll(pocketbook.Share(), perm); err != nil {
+		return fmt.Errorf("failed to create share dir: %w", err)
+	}
+
+	logfile, err := os.OpenFile(pocketbook.Share(logFileName), os.O_CREATE|os.O_APPEND, perm)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
@@ -63,6 +72,11 @@ func mainInternal(w io.Writer) error {
 	err = synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
 	if err != nil {
 		return fmt.Errorf("synchronization finished with error: %w", err)
+	}
+
+	cmd := exec.Command("/bin/killall", "scanner.app")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to execute command: %w", err)
 	}
 
 	return nil
