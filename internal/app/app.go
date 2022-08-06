@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -16,8 +17,7 @@ import (
 	dropboxLib "github.com/tj/go-dropbox"
 )
 
-const (
-	perm             = 0755
+var (
 	parallelism      = 3
 	logFileName      = "pb-dropbox-downloader.log"
 	databaseFileName = "pb-dropbox-downloader.bin"
@@ -25,7 +25,9 @@ const (
 	version          = "X.X.X"
 )
 
-func Run(w io.Writer) error {
+const perm = 0755
+
+func Run(ctx context.Context, w io.Writer) error {
 	fs := osfs.New("")
 
 	if err := fs.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
@@ -72,12 +74,12 @@ func Run(w io.Writer) error {
 		folder = pocketbook.SdCard(syncConfig.Folder)
 	}
 
-	err = synchroniser.Sync(folder, syncConfig.AllowDeleteFiles)
+	err = synchroniser.Sync(ctx, folder, syncConfig.AllowDeleteFiles)
 	if err != nil {
 		return fmt.Errorf("synchronization finished with error: %w", err)
 	}
 
-	cmd := exec.Command("/bin/killall", "scanner.app")
+	cmd := exec.CommandContext(ctx, "/bin/killall", "scanner.app")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to execute command: %w", err)
 	}

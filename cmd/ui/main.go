@@ -11,10 +11,12 @@ import (
 	ink "github.com/dennwc/inkview"
 )
 
+const fatalExidCode = 500
+
 func main() {
 	ink.DefaultFontHeight = 18
 	ink.RunCLI(func(ctx context.Context, w io.Writer) error {
-		defer utils.PanicInterceptor(os.Exit, w, 500)
+		defer utils.PanicInterceptor(os.Exit, w, fatalExidCode)
 
 		_, err := ink.KeepNetwork()
 		if err != nil {
@@ -22,6 +24,6 @@ func main() {
 			return nil
 		}
 
-		return app.Run(w)
+		return app.Run(ctx, w)
 	}, nil)
 }

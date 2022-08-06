@@ -17,7 +17,7 @@ import (
 
 type dataChannel = chan dropbox.RemoteFile
 
-func (s *DropboxSynchroniser) download(folder string, files []dropbox.RemoteFile) error {
+func (s *DropboxSynchroniser) download(ctx context.Context, folder string, files []dropbox.RemoteFile) error {
 	if len(files) == 0 {
 		s.printf("no files to download")
 	}
@@ -26,7 +26,7 @@ func (s *DropboxSynchroniser) download(folder string, files []dropbox.RemoteFile
 
 	source := make(dataChannel)
 
-	tasksGroup, _ := errgroup.WithContext(context.Background())
+	tasksGroup, _ := errgroup.WithContext(ctx)
 	for i := 0; i < calculateTheadsCount(s.maxParallelism, files); i++ {
 		tasksGroup.Go(s.createDownloadThread(folder, source))
 	}

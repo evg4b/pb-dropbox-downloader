@@ -4,6 +4,7 @@ package synchroniser_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"io/fs"
@@ -459,7 +460,7 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 				synchroniser.WithMaxParallelism(3),
 			)
 
-			err := synchroniser.Sync("./dropbox", tt.remove)
+			err := synchroniser.Sync(context.TODO(), "./dropbox", tt.remove)
 
 			testutils.AssertError(t, tt.expectedErr, err)
 			testutils.AssertFiles(t, tt.fs, "./dropbox", tt.expected)

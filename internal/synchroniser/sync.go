@@ -2,6 +2,7 @@
 package synchroniser
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/dropbox"
@@ -9,10 +10,10 @@ import (
 )
 
 // Sync synchronies folder with application folder in drop box.
-func (s *DropboxSynchroniser) Sync(folder string, remove bool) error {
+func (s *DropboxSynchroniser) Sync(ctx context.Context, folder string, remove bool) error {
 	s.infoHeader()
 
-	if err := s.files.MkdirAll(folder, os.ModePerm); err != nil && !os.IsExist(err) {
+	if err := s.files.MkdirAll(folder, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -27,7 +28,7 @@ func (s *DropboxSynchroniser) Sync(folder string, remove bool) error {
 		return err
 	}
 
-	err = s.download(normalizedFolder, filesToDownload)
+	err = s.download(ctx, normalizedFolder, filesToDownload)
 	if err != nil {
 		return err
 	}
@@ -47,13 +48,13 @@ func (s *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	return nil
 }
 
-func (ds *DropboxSynchroniser) getLocalFiles(folder string) ([]os.FileInfo, error) {
-	files, err := ds.files.ReadDir(folder)
+func (s *DropboxSynchroniser) getLocalFiles(folder string) ([]os.FileInfo, error) {
+	files, err := s.files.ReadDir(folder)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ds.refreshStorage(files)
+	err = s.refreshStorage(files)
 	if err != nil {
 		return nil, err
 	}
@@ -61,15 +62,15 @@ func (ds *DropboxSynchroniser) getLocalFiles(folder string) ([]os.FileInfo, erro
 	return files, nil
 }
 
-func (ds *DropboxSynchroniser) getFilesToDownload() ([]dropbox.RemoteFile, error) {
-	remoteFiles, err := ds.dropbox.GetFiles()
+func (s *DropboxSynchroniser) getFilesToDownload() ([]dropbox.RemoteFile, error) {
+	remoteFiles, err := s.dropbox.GetFiles()
 	if err != nil {
 		return nil, err
 	}
 
 	filesToDownload := []dropbox.RemoteFile{}
 	for _, remoteFile := range remoteFiles {
-		if hash, err := ds.storage.Get(remoteFile.Path); err == nil {
+		if hash, err := s.storage.Get(remoteFile.Path); err == nil {
 			if strings.EqualFold(hash, remoteFile.Hash) {
 				continue
 			}
