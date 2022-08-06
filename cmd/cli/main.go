@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	defer utils.PanicInterceptor(os.Exit, 500)
+	defer utils.PanicInterceptor(os.Exit, os.Stdout, 500)
 	if err := app.Run(os.Stdout); err != nil {
 		panic(err)
 	}

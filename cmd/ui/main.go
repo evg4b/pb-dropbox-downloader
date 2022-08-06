@@ -14,7 +14,7 @@ import (
 func main() {
 	ink.DefaultFontHeight = 20
 	ink.RunCLI(func(ctx context.Context, w io.Writer) error {
-		defer utils.PanicInterceptor(os.Exit, 500)
+		defer utils.PanicInterceptor(os.Exit, w, 500)
 
 		_, err := ink.KeepNetwork()
 		if err != nil {
