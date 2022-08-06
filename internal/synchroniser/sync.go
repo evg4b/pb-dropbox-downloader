@@ -12,6 +12,10 @@ import (
 func (s *DropboxSynchroniser) Sync(folder string, remove bool) error {
 	s.infoHeader()
 
+	if err := s.files.MkdirAll(folder, os.ModePerm); err != nil && !os.IsExist(err) {
+		return err
+	}
+
 	normalizedFolder := filepath.ToSlash(folder)
 	files, err := s.getLocalFiles(normalizedFolder)
 	if err != nil {
