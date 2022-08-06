@@ -19,7 +19,9 @@ type dataChannel = chan dropbox.RemoteFile
 
 func (s *DropboxSynchroniser) download(ctx context.Context, folder string, files []dropbox.RemoteFile) error {
 	if len(files) == 0 {
-		s.printf("no files to download")
+		s.printf("No files to download")
+
+		return nil
 	}
 
 	s.printf("Found %d files to download:\n", len(files))

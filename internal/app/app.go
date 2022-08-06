@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"pb-dropbox-downloader/internal/config"
 	"pb-dropbox-downloader/internal/datastorage"
 	"pb-dropbox-downloader/internal/dropbox"
@@ -79,9 +78,11 @@ func Run(ctx context.Context, w io.Writer) error {
 		return fmt.Errorf("synchronization finished with error: %w", err)
 	}
 
-	cmd := exec.CommandContext(ctx, "/bin/killall", "scanner.app")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to execute command: %w", err)
+	fmt.Fprintln(w)
+
+	err = pocketbook.RefreshScanner(ctx)
+	if err != nil {
+		return fmt.Errorf("filed to update book list: %w", err)
 	}
 
 	return nil
