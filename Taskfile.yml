@@ -26,6 +26,10 @@ tasks:
 
   build:internal: docker run --rm -v ${PWD}:/app {{.SDK_IMAGE}} build -v {{.LDFLAGS}} -o {{.APP_NAME}} /app/{{.ENTRYPOINT}}
 
+  build:ci:
+    cmds:
+      - go build {{.LDFLAGS}} -o {{.APP_NAME}} {{.CLI_ENTRYPOINT}}
+
   build:
     deps:
       - task: build:internal
@@ -42,4 +46,6 @@ tasks:
 
   test-local: go test ./internal/...
 
-  test: docker run --rm -it -v ${PWD}:/app golang:1.17.2 bash -c "cd /app; go test -cover -v ./internal/zw..."
+  test:ci: go test -cover -v ./internal/...
+
+  test: docker run --rm -it -v ${PWD}:/app golang:1.17.2 bash -c "cd /app; go test -cover -v ./internal/..."

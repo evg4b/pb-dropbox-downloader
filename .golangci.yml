@@ -1,6 +1,7 @@
 run:
   skip-dirs:
     - testing
+    - cmd
   allow-parallel-runners: true
   timeout: 5m
 linters:
@@ -44,7 +45,6 @@ linters:
     - gomnd
     - gomoddirectives
     - gosec
-    - ifshort
     - importas
     - makezero
     - misspell
