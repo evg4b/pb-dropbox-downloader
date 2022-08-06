@@ -10,9 +10,15 @@ env:
   LDFLAGS: -ldflags="-X pb-dropbox-downloader/internal/app.version={{ .VERSION  | upper }} -s -w"
 
 tasks:
-  default: go run {{.LDFLAGS}} -tags=debug {{ .CLI_ENTRYPOINT }}
+  default:
+    cmds:
+      - task: run
 
-  dd: echo {{.VERSION}}
+  run: go run {{.LDFLAGS}} -tags=debug {{ .CLI_ENTRYPOINT }}
+  run:rm:
+    cmds:
+      - task: run
+      - rm -rf ./testing/testdata/internal/dropbox
 
   build:debug:
     cmds:
