@@ -12,10 +12,11 @@ const logo = `___         _       _   ___           _
 |   \ _____ _|_|__ _ | |___  __ _ __| |___ _ _
 | |) / _ \ V  V / ' \| / _ \/ _' / _' / -_) '_|
 |___/\___/\_/\_/|_||_|_\___/\__,_\__,_\___|_|
+
 `
 
 func (ds *DropboxSynchroniser) infoHeader() {
-	fmt.Fprintln(ds.output, logo)
+	fmt.Fprint(ds.output, logo)
 	fmt.Println()
 	fmt.Fprintf(ds.output, "Account: %s\n", ds.dropbox.AccountDisplayName())
 	fmt.Fprintf(ds.output, "Email: %s\n", ds.dropbox.AccountEmail())

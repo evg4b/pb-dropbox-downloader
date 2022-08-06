@@ -14,7 +14,6 @@ func init() { // nolint: gochecknoinits
 
 	const perm = 0775
 
-	_ = os.MkdirAll(pocketbook.ConfigPath(), perm)
-	_ = os.MkdirAll(pocketbook.Share(), perm)
+	_ = os.MkdirAll(pocketbook.Internal(), perm)
 	_ = os.MkdirAll(pocketbook.SdCard(), perm)
 }
