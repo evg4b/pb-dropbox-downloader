@@ -22,6 +22,7 @@ const (
 	logFileName      = "pb-dropbox-downloader.log"
 	databaseFileName = "pb-dropbox-downloader.bin"
 	configFileName   = "pb-dropbox-downloader-config.json"
+	version          = "X.X.X"
 )
 
 func Run(w io.Writer) error {
@@ -63,6 +64,7 @@ func Run(w io.Writer) error {
 		synchroniser.WithDropboxClient(dropboxClient),
 		synchroniser.WithOutput(w),
 		synchroniser.WithMaxParallelism(parallelism),
+		synchroniser.WithVersion(version),
 	)
 
 	folder := pocketbook.Internal(syncConfig.Folder)

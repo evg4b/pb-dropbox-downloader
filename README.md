@@ -51,10 +51,11 @@ task test-local # to run all tests on local machine
 You can build application with custom [ldflags flags](https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications-ru).
 
 Available flags :
-- `main.parallelism` - Number of goroutines used for downloading files (default value `3`)
-- `main.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
-- `main.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
-- `main.configFileName` - Name of configuration file (default  value `pb-dropbox-downloader-config.json`)
+- `internal.app.parallelism` - Number of goroutines used for downloading files (default value `3`)
+- `internal.app.logFileName` - Name of log file (default value `pb-dropbox-downloader.log`)
+- `internal.app.databaseFileName` - Name of file for data storage (default value `pb-dropbox-downloader.bin`)
+- `internal.app.configFileName` - Name of configuration file (default  value `pb-dropbox-downloader-config.json`)
+- `internal.app.version` - Name of configuration file (default  value `pb-dropbox-downloader-config.json`)
 
 #### CLI version
 

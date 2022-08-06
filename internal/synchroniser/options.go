@@ -37,3 +37,9 @@ func WithMaxParallelism(maxParallelism int) synchroniserOption {
 		ds.maxParallelism = maxParallelism
 	}
 }
+
+func WithVersion(version string) synchroniserOption {
+	return func(ds *DropboxSynchroniser) {
+		ds.version = version
+	}
+}

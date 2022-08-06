@@ -14,6 +14,7 @@ type DropboxSynchroniser struct {
 	dropbox        Dropbox
 	maxParallelism int
 	output         io.Writer
+	version        string
 }
 
 // NewSynchroniser creates and initialize new instance of DropboxSynchroniser create.
