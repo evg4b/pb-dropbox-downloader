@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	ink.DefaultFontHeight = 20
+	ink.DefaultFontHeight = 18
 	ink.RunCLI(func(ctx context.Context, w io.Writer) error {
 		defer utils.PanicInterceptor(os.Exit, w, 500)
 
