@@ -5,18 +5,18 @@ env:
   APP_NAME: pb-dropbox-downloader.app
   UI_ENTRYPOINT: cmd/ui/main.go
   CLI_ENTRYPOINT: cmd/cli/main.go
-  LDFLAGS: -ldflags="-s -w"
+  VERSION:
+    sh: git describe
+  LDFLAGS: -ldflags="-X pb-dropbox-downloader/internal/app.version={{ .VERSION  | upper }} -s -w"
 
 tasks:
-  default: go run -tags=debug {{.CLI_ENTRYPOINT}}
+  default: go run {{.LDFLAGS}} -tags=debug {{ .CLI_ENTRYPOINT }}
 
-  build-cli:
-    env:
-      GOOS: linux
-      GOARCH: arm
-      GOARM: 5
+  dd: echo {{.VERSION}}
+
+  build:debug:
     cmds:
-      - go build {{.LDFLAGS}} -o {{.APP_NAME}} {{.CLI_ENTRYPOINT}}
+      - go build -tags=debug {{.LDFLAGS}} -o {{.APP_NAME}} {{.CLI_ENTRYPOINT}}
 
   build:internal: docker run --rm -v ${PWD}:/app {{.SDK_IMAGE}} build -v {{.LDFLAGS}} -o {{.APP_NAME}} /app/{{.ENTRYPOINT}}
 
@@ -36,4 +36,4 @@ tasks:
 
   test-local: go test ./internal/...
 
-  test: docker run --rm -it -v ${PWD}:/app golang:1.17.2 bash -c 'cd /app; go test -cover -v ./internal/zw...'
+  test: docker run --rm -it -v ${PWD}:/app golang:1.17.2 bash -c "cd /app; go test -cover -v ./internal/zw..."
