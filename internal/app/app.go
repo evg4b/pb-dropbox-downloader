@@ -28,11 +28,11 @@ const (
 func Run(w io.Writer) error {
 	fs := osfs.New("")
 
-	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
+	if err := fs.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
 		return fmt.Errorf("failed to create config dir: %w", err)
 	}
 
-	if err := os.MkdirAll(pocketbook.Share(), perm); err != nil {
+	if err := fs.MkdirAll(pocketbook.Share(), perm); err != nil {
 		return fmt.Errorf("failed to create share dir: %w", err)
 	}
 
