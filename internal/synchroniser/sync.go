@@ -9,32 +9,32 @@ import (
 )
 
 // Sync synchronies folder with application folder in drop box.
-func (ds *DropboxSynchroniser) Sync(folder string, remove bool) error {
-	ds.infoHeader()
+func (s *DropboxSynchroniser) Sync(folder string, remove bool) error {
+	s.infoHeader()
 
 	normalizedFolder := filepath.ToSlash(folder)
-	files, err := ds.getLocalFiles(normalizedFolder)
+	files, err := s.getLocalFiles(normalizedFolder)
 	if err != nil {
 		return err
 	}
 
-	filesToDownload, err := ds.getFilesToDownload()
+	filesToDownload, err := s.getFilesToDownload()
 	if err != nil {
 		return err
 	}
 
-	err = ds.download(normalizedFolder, filesToDownload)
+	err = s.download(normalizedFolder, filesToDownload)
 	if err != nil {
 		return err
 	}
 
-	err = ds.storage.Commit()
+	err = s.storage.Commit()
 	if err != nil {
 		return err
 	}
 
 	if remove {
-		err = ds.deleteFiles(normalizedFolder, files)
+		err = s.deleteFiles(normalizedFolder, files)
 		if err != nil {
 			return err
 		}

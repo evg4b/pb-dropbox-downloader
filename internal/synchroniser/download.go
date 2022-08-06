@@ -17,18 +17,18 @@ import (
 
 type dataChannel = chan dropbox.RemoteFile
 
-func (ds *DropboxSynchroniser) download(folder string, files []dropbox.RemoteFile) error {
+func (s *DropboxSynchroniser) download(folder string, files []dropbox.RemoteFile) error {
 	if len(files) == 0 {
-		ds.printf("no files to download")
+		s.printf("no files to download")
 	}
 
-	ds.printf("founded %d files to download", len(files))
+	s.printf("Found %d files to download:\n", len(files))
 
 	source := make(dataChannel)
 
 	tasksGroup, _ := errgroup.WithContext(context.Background())
-	for i := 0; i < calculateTheadsCount(ds.maxParallelism, files); i++ {
-		tasksGroup.Go(ds.createDownloadThread(folder, source))
+	for i := 0; i < calculateTheadsCount(s.maxParallelism, files); i++ {
+		tasksGroup.Go(s.createDownloadThread(folder, source))
 	}
 
 	for _, file := range files {
@@ -40,14 +40,14 @@ func (ds *DropboxSynchroniser) download(folder string, files []dropbox.RemoteFil
 	return tasksGroup.Wait()
 }
 
-func (ds *DropboxSynchroniser) createDownloadThread(folder string, source dataChannel) func() error {
+func (s *DropboxSynchroniser) createDownloadThread(folder string, source dataChannel) func() error {
 	return func() error {
 		var result *multierror.Error
 
 		for file := range source {
-			err := ds.downloadFile(file, folder)
+			err := s.downloadFile(file, folder)
 			if err != nil {
-				ds.printf("%s .... [filed]", filepath.Base(file.Path))
+				s.printf("%s .... [filed]", filepath.Base(file.Path))
 				log.Println(err)
 
 				result = multierror.Append(result, err)
@@ -55,10 +55,10 @@ func (ds *DropboxSynchroniser) createDownloadThread(folder string, source dataCh
 				continue
 			}
 
-			ds.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
-			err = ds.storage.Add(file.Path, file.Hash)
+			s.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
+			err = s.storage.Add(file.Path, file.Hash)
 			if err != nil {
-				ds.printf("%s .... [filed]", filepath.Base(file.Path))
+				s.printf("%s .... [filed]", filepath.Base(file.Path))
 				log.Println(err)
 
 				result = multierror.Append(result, err)
@@ -71,8 +71,8 @@ func (ds *DropboxSynchroniser) createDownloadThread(folder string, source dataCh
 	}
 }
 
-func (ds *DropboxSynchroniser) downloadFile(file dropbox.RemoteFile, folder string) error {
-	fileReader, err := ds.dropbox.DownloadFile(file.Path)
+func (s *DropboxSynchroniser) downloadFile(file dropbox.RemoteFile, folder string) error {
+	fileReader, err := s.dropbox.DownloadFile(file.Path)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (ds *DropboxSynchroniser) downloadFile(file dropbox.RemoteFile, folder stri
 		return err
 	}
 
-	localFile, err := ds.files.Create(utils.JoinPath(folder, file.Path))
+	localFile, err := s.files.Create(utils.JoinPath(folder, file.Path))
 	if err != nil {
 		return err
 	}

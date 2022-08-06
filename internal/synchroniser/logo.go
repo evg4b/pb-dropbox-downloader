@@ -17,15 +17,16 @@ const logo = `___         _       _   ___           _
 |___/\___/\_/\_/|_||_|_\___/\__,_\__,_\___|_|  
 `
 
-func (ds *DropboxSynchroniser) infoHeader() {
+func (s *DropboxSynchroniser) infoHeader() {
 	logoLength := 46
 	versionLine := strings.Repeat(" ", logoLength)
-	versionSuffix := fmt.Sprintf("version: %s", ds.version)
+	versionSuffix := fmt.Sprintf("version: %s", s.version)
 	versionPreffix := versionLine[:logoLength-len(versionSuffix)]
 
-	fmt.Fprint(ds.output, logo)
-	fmt.Fprintln(ds.output, versionPreffix, versionSuffix)
+	fmt.Fprint(s.output, logo)
+	fmt.Fprintln(s.output, versionPreffix, versionSuffix)
 	fmt.Println()
-	fmt.Fprintf(ds.output, "Account: %s\n", ds.dropbox.AccountDisplayName())
-	fmt.Fprintf(ds.output, "Email: %s\n", ds.dropbox.AccountEmail())
+	fmt.Fprintf(s.output, "Account: %s\n", s.dropbox.AccountDisplayName())
+	fmt.Fprintf(s.output, "Email: %s\n", s.dropbox.AccountEmail())
+	fmt.Println()
 }
