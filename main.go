@@ -32,7 +32,7 @@ func mainInternal(w io.Writer) error {
 		return fmt.Errorf("failed to create config dir: %w", err)
 	}
 
-	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
+	if err := os.MkdirAll(pocketbook.Share(), perm); err != nil {
 		return fmt.Errorf("failed to create share dir: %w", err)
 	}
 
