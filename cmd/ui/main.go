@@ -1,6 +1,3 @@
-//go:build UI
-// +build UI
-
 package main
 
 import (
@@ -8,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"pb-dropbox-downloader/internal/app"
 	"pb-dropbox-downloader/internal/utils"
 
 	ink "github.com/dennwc/inkview"
@@ -16,7 +14,7 @@ import (
 func main() {
 	ink.DefaultFontHeight = 20
 	ink.RunCLI(func(ctx context.Context, w io.Writer) error {
-		defer utils.PanicInterceptor(os.Exit, fatalExitCode)
+		defer utils.PanicInterceptor(os.Exit, 500)
 
 		_, err := ink.KeepNetwork()
 		if err != nil {
@@ -24,6 +22,6 @@ func main() {
 			return nil
 		}
 
-		return mainInternal(w)
+		return app.Run(w)
 	}, nil)
 }

@@ -1,7 +1,14 @@
 version: '3'
 
+env:
+  SDK_IMAGE: 5keeve/pocketbook-go-sdk:6.3.0-b288-v1
+  APP_NAME: pb-dropbox-downloader.app
+  UI_ENTRYPOINT: cmd/ui/main.go
+  CLI_ENTRYPOINT: cmd/cli/main.go
+  LDFLAGS: -ldflags="-s -w"
+
 tasks:
-  default: go run .
+  default: go run -tags=debug {{.CLI_ENTRYPOINT}}
 
   build-cli:
     env:
@@ -9,12 +16,24 @@ tasks:
       GOARCH: arm
       GOARM: 5
     cmds:
-      - go build -ldflags="-s -w" -o pb-dropbox-downloader.app .
+      - go build {{.LDFLAGS}} -o {{.APP_NAME}} {{.CLI_ENTRYPOINT}}
 
-  build: docker run --rm -v ${PWD}:/app 5keeve/pocketbook-go-sdk:6.3.0-b288-v1 build -v -tags=UI -ldflags="-s -w" -o pb-dropbox-downloader.app .
+  build:internal: docker run --rm -v ${PWD}:/app {{.SDK_IMAGE}} build -v {{.LDFLAGS}} -o {{.APP_NAME}} /app/{{.ENTRYPOINT}}
 
-  lint: golangci-lint run ./...
+  build:
+    deps:
+      - task: build:internal
+        vars:
+          ENTRYPOINT: '{{.UI_ENTRYPOINT}}'
 
-  test-local: go test ./...
+  build:cli:
+    deps:
+      - task: build:internal
+        vars:
+          ENTRYPOINT: '{{.CLI_ENTRYPOINT}}'
 
-  test: docker run --rm -it -v ${PWD}:/app golang bash -c 'cd /app; go test -cover -v ./...'
+  lint-local: golangci-lint run ./...
+
+  test-local: go test ./internal/...
+
+  test: docker run --rm -it -v ${PWD}:/app golang:1.17.2 bash -c 'cd /app; go test -cover -v ./internal/zw...'

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"fmt"
@@ -18,14 +18,13 @@ import (
 
 const (
 	perm             = 0755
-	fatalExitCode    = 500
 	parallelism      = 3
 	logFileName      = "pb-dropbox-downloader.log"
 	databaseFileName = "pb-dropbox-downloader.bin"
 	configFileName   = "pb-dropbox-downloader-config.json"
 )
 
-func mainInternal(w io.Writer) error {
+func Run(w io.Writer) error {
 	fs := osfs.New("")
 
 	if err := os.MkdirAll(pocketbook.ConfigPath(), perm); err != nil {
@@ -49,8 +48,10 @@ func mainInternal(w io.Writer) error {
 		return fmt.Errorf("failed loaded configuration: %w", err)
 	}
 
-	dropboxLibClient := dropboxLib.New(dropboxLib.NewConfig(syncConfig.AccessToken))
-	dropboxClient := dropbox.NewClient(dropbox.WithGoDropbox(dropboxLibClient))
+	dropboxClient := dropbox.NewClient(dropbox.WithGoDropbox(
+		dropboxLib.New(dropboxLib.NewConfig(syncConfig.AccessToken)),
+	))
+
 	storage := datastorage.NewFileStorage(
 		datastorage.WithFilesystem(fs),
 		datastorage.WithConfigPath(pocketbook.Share(databaseFileName)),
