@@ -81,8 +81,8 @@ func (ds *DropboxSynchroniser) getFilesToDownload() ([]dropbox.RemoteFile, error
 	return filesToDownload, nil
 }
 
-func (ds *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
-	storageFiles, err := ds.storage.ToMap()
+func (s *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
+	storageFiles, err := s.storage.ToMap()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (ds *DropboxSynchroniser) refreshStorage(files []os.FileInfo) error {
 		return fileSliceContins(files, key)
 	})
 
-	ds.storage.FromMap(filteredMap)
+	s.storage.FromMap(filteredMap)
 
-	return ds.storage.Commit()
+	return s.storage.Commit()
 }

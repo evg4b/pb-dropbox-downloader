@@ -54,7 +54,8 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 				AccountDisplayNameMock.Return("test").
 				GetFilesMock.Return([]dropbox.RemoteFile{}, nil),
 			fs: mocks.NewFilesystemMock(t).
-				ReadDirMock.Return(nil, errors.New("fs error")),
+				ReadDirMock.Return(nil, errors.New("fs error")).
+				MkdirAllMock.Return(nil),
 			expectedErr: "fs error",
 		},
 		{
@@ -265,7 +266,8 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 			),
 			fs: mocks.NewFilesystemMock(t).
 				ReadDirMock.Return([]fs.FileInfo{}, nil).
-				CreateMock.Return(nil, errors.New("file system write error")),
+				CreateMock.Return(nil, errors.New("file system write error")).
+				MkdirAllMock.Return(nil),
 			expectedErr: "1 error occurred:\n\t* file system write error\n\n",
 		},
 		{
@@ -370,7 +372,9 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 				mocks.NewFileInfo(t).NameMock.Return("file1"),
 				mocks.NewFileInfo(t).NameMock.Return("file2"),
 				mocks.NewFileInfo(t).NameMock.Return("file3"),
-			}, nil).RemoveMock.Return(errors.New("remove error")),
+			}, nil).
+				RemoveMock.Return(errors.New("remove error")).
+				MkdirAllMock.Return(nil),
 			remove:      true,
 			expectedErr: "remove error",
 		},
@@ -391,7 +395,9 @@ func TestDropboxSynchroniser_Sync(t *testing.T) {
 				mocks.NewFileInfo(t).NameMock.Return("file1"),
 				mocks.NewFileInfo(t).NameMock.Return("file2"),
 				mocks.NewFileInfo(t).NameMock.Return("file3"),
-			}, nil).RemoveMock.Return(nil),
+			}, nil).
+				RemoveMock.Return(nil).
+				MkdirAllMock.Return(nil),
 			remove:      true,
 			expectedErr: "remove key error",
 		},
