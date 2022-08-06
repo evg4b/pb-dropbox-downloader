@@ -33,6 +33,11 @@ func TestConfigPath(t *testing.T) {
 			pathPartials: []string{"demo\\config.json"},
 			expected:     "/mnt/ext1/system/config/demo/config.json",
 		},
+		{
+			name:         "resolve folder path",
+			pathPartials: []string{},
+			expected:     "/mnt/ext1/system/config",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -67,6 +72,11 @@ func TestApplication(t *testing.T) {
 			name:         "resolve folder and file from string with backslash",
 			pathPartials: []string{"demo\\pb.app"},
 			expected:     "/mnt/ext1/application/demo/pb.app",
+		},
+		{
+			name:         "resolve folder path",
+			pathPartials: []string{},
+			expected:     "/mnt/ext1/application",
 		},
 	}
 	for _, tt := range tests {
@@ -103,6 +113,11 @@ func TestShare(t *testing.T) {
 			pathPartials: []string{"demo\\data.bin"},
 			expected:     "/mnt/ext1/system/share/demo/data.bin",
 		},
+		{
+			name:         "resolve folder path",
+			pathPartials: []string{},
+			expected:     "/mnt/ext1/system/share",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -138,6 +153,11 @@ func TestSdCard(t *testing.T) {
 			pathPartials: []string{"demo\\book.epub"},
 			expected:     "/mnt/ext2/demo/book.epub",
 		},
+		{
+			name:         "resolve folder path",
+			pathPartials: []string{},
+			expected:     "/mnt/ext2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -172,6 +192,11 @@ func TestInternal(t *testing.T) {
 			name:         "resolve folder and file from string with backslash",
 			pathPartials: []string{"demo\\book.epub"},
 			expected:     "/mnt/ext1/demo/book.epub",
+		},
+		{
+			name:         "resolve folder path",
+			pathPartials: []string{},
+			expected:     "/mnt/ext1",
 		},
 	}
 	for _, tt := range tests {
