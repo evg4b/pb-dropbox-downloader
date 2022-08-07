@@ -4,18 +4,22 @@ package synchroniser
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"pb-dropbox-downloader/internal/dropbox"
 	"pb-dropbox-downloader/internal/utils"
 
-	"github.com/c2h5oh/datasize"
 	"github.com/hashicorp/go-multierror"
 
 	"golang.org/x/sync/errgroup"
 )
 
 type dataChannel = chan dropbox.RemoteFile
+
+type printInfo struct {
+	name    string
+	size    uint64
+	success bool
+}
 
 func (s *DropboxSynchroniser) download(ctx context.Context, folder string, files []dropbox.RemoteFile) error {
 	if len(files) == 0 {
@@ -27,11 +31,16 @@ func (s *DropboxSynchroniser) download(ctx context.Context, folder string, files
 	s.printf("Found %d files to download:\n", len(files))
 
 	source := make(dataChannel)
+	results := make(chan printInfo)
 
 	tasksGroup, _ := errgroup.WithContext(ctx)
+
 	for i := 0; i < calculateTheadsCount(s.maxParallelism, files); i++ {
-		tasksGroup.Go(s.createDownloadThread(folder, source))
+		tasksGroup.Go(s.createDownloadThread(results, folder, source))
 	}
+
+	go s.printerThread(results)
+	defer close(results)
 
 	for _, file := range files {
 		source <- file
@@ -42,30 +51,34 @@ func (s *DropboxSynchroniser) download(ctx context.Context, folder string, files
 	return tasksGroup.Wait()
 }
 
-func (s *DropboxSynchroniser) createDownloadThread(folder string, source dataChannel) func() error {
+func substring(s string, num int) string {
+	chars := []rune(s)
+
+	return string(chars[:num])
+}
+
+func (s *DropboxSynchroniser) createDownloadThread(target chan printInfo, folder string, source dataChannel) func() error {
 	return func() error {
 		var result *multierror.Error
 
 		for file := range source {
-			err := s.downloadFile(file, folder)
-			if err != nil {
-				s.printf("%s .... [filed]", filepath.Base(file.Path))
-				log.Println(err)
+			fileName := filepath.Base(file.Path)
+			if err := s.downloadFile(file, folder); err != nil {
+				target <- printInfo{name: fileName}
 
 				result = multierror.Append(result, err)
 
 				continue
 			}
 
-			s.printf("%s (%s) .... [ok]", filepath.Base(file.Path), datasize.ByteSize(file.Size).HumanReadable())
-			err = s.storage.Add(file.Path, file.Hash)
-			if err != nil {
-				s.printf("%s .... [filed]", filepath.Base(file.Path))
-				log.Println(err)
+			target <- printInfo{
+				name:    fileName,
+				size:    file.Size,
+				success: true,
+			}
 
+			if err := s.storage.Add(file.Path, file.Hash); err != nil {
 				result = multierror.Append(result, err)
-
-				continue
 			}
 		}
 
